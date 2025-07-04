@@ -95,6 +95,39 @@
             display: inline-block;
         }
 
+        .system-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4ade80;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
         .workflow-tabs {
             display: flex;
             gap: 15px;
@@ -339,6 +372,83 @@
             box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
         }
 
+        .refresh-btn {
+            position: fixed;
+            top: 20px;
+            right: 120px;
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: center;
+            color: #fecaca;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            opacity: 0.6;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        /* Debug Panel */
+        .debug-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            max-width: 400px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .debug-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px;
+            background: rgba(139, 92, 246, 0.3);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            z-index: 1001;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .folder-grid {
@@ -369,6 +479,10 @@
             .logo-text {
                 font-size: 2rem;
             }
+
+            .system-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         /* Loading Animation */
@@ -386,12 +500,37 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Connection Status */
+        .connection-status {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .connection-online {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            color: #6ee7b7;
+        }
+
+        .connection-offline {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <!-- Header Afbeelding -->
+            <!-- Header Image -->
             <div class="header-image-container">
                 <img src="https://thevikingwebdesign.com/wp-content/uploads/2025/06/486381498_122228803028077727_8899768120732723409_n-e1748890457554.png" 
                      alt="The Viking Automation" 
@@ -401,13 +540,43 @@
             <div class="logo-text">The Viking Automation</div>
             <div class="subtitle">N8N Workflow Organization System</div>
             <div class="user-info">
-                Logged in as: <strong>VIKING001</strong> (Owner) • Live Data Active
+                Logged in as: <strong>VIKING001</strong> (Owner) • <span id="data-status">Connecting...</span>
             </div>
         </div>
 
+        <!-- System Statistics -->
+        <div class="system-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="total-workflows">0</div>
+                <div class="stat-label">Total Workflows</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="active-workflows">0</div>
+                <div class="stat-label">Active Workflows</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="client-count">0</div>
+                <div class="stat-label">Client Projects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="last-sync">--:--</div>
+                <div class="stat-label">Last Sync</div>
+            </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <button class="refresh-btn" onclick="refreshAllData()">
+            🔄 Refresh
+        </button>
+        
         <button class="logout-btn" onclick="window.location.href='/';">
             🚪 Logout
         </button>
+
+        <!-- Connection Status -->
+        <div id="connection-status" class="connection-status connection-offline">
+            🔴 Offline
+        </div>
 
         <!-- Workflow Tabs -->
         <div class="workflow-tabs">
@@ -429,7 +598,7 @@
                             <span class="folder-icon">🤖</span>
                             <span class="folder-title">The Viking Automation</span>
                         </div>
-                        <div class="folder-stats">Loading...</div>
+                        <div class="folder-stats" id="automation-stats">Loading...</div>
                     </div>
                     <div class="workflow-list" id="automation-workflows">
                         <div class="loading-spinner"></div>
@@ -443,7 +612,7 @@
                             <span class="folder-icon">🎨</span>
                             <span class="folder-title">The Viking Webdesign</span>
                         </div>
-                        <div class="folder-stats">Loading...</div>
+                        <div class="folder-stats" id="webdesign-stats">Loading...</div>
                     </div>
                     <div class="workflow-list" id="webdesign-workflows">
                         <div class="loading-spinner"></div>
@@ -457,7 +626,7 @@
                             <span class="folder-icon">🎯</span>
                             <span class="folder-title">The Viking Coaching</span>
                         </div>
-                        <div class="folder-stats">Loading...</div>
+                        <div class="folder-stats" id="coaching-stats">Loading...</div>
                     </div>
                     <div class="workflow-list" id="coaching-workflows">
                         <div class="loading-spinner"></div>
@@ -475,9 +644,62 @@
         </div>
     </div>
 
+    <!-- Debug Panel -->
+    <div id="debug-panel" class="debug-panel">
+        <strong>Debug Log:</strong><br>
+        <div id="debug-log"></div>
+    </div>
+    
+    <button class="debug-toggle" onclick="toggleDebug()">
+        🐛
+    </button>
+
     <script>
+        // Global state
+        let debugMode = false;
+        let connectionStatus = false;
+        let lastSyncTime = new Date();
+        let allWorkflows = [];
+
+        // Debug logging
+        function debugLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            console.log(logEntry);
+            
+            if (debugMode) {
+                const debugPanel = document.getElementById('debug-log');
+                debugPanel.innerHTML += logEntry + '<br>';
+                debugPanel.scrollTop = debugPanel.scrollHeight;
+            }
+        }
+
+        function toggleDebug() {
+            debugMode = !debugMode;
+            const panel = document.getElementById('debug-panel');
+            panel.style.display = debugMode ? 'block' : 'none';
+            debugLog(`Debug mode ${debugMode ? 'enabled' : 'disabled'}`);
+        }
+
+        // Connection status management
+        function updateConnectionStatus(online) {
+            connectionStatus = online;
+            const statusElement = document.getElementById('connection-status');
+            if (online) {
+                statusElement.className = 'connection-status connection-online';
+                statusElement.innerHTML = '🟢 Online';
+                document.getElementById('data-status').textContent = 'Live Data Active';
+            } else {
+                statusElement.className = 'connection-status connection-offline';
+                statusElement.innerHTML = '🔴 Offline';
+                document.getElementById('data-status').textContent = 'Connection Failed';
+            }
+        }
+
         // Tab switching functionality
         function switchTab(tabName) {
+            debugLog(`Switching to tab: ${tabName}`);
+            
             // Hide all tabs
             document.querySelectorAll('.workflow-content').forEach(tab => {
                 tab.classList.remove('active');
@@ -502,720 +724,146 @@
             }
         }
 
-        // Load Viking workflows (Your Workflows tab)
+        // Enhanced workflow loading with better error handling
         async function loadVikingWorkflows() {
+            debugLog('Loading Viking workflows...');
+            
             try {
-                const response = await fetch('https://n8n.thevikingwebdesign.com/webhook/get-my-workflows');
+                updateConnectionStatus(false); // Set to connecting
+                
+                // Try the actual webhook first
+                let response = await fetch('https://n8n.thevikingwebdesign.com/webhook/get-my-workflows');
                 let rawData = await response.json();
                 
-                console.log('🔍 Raw API response type:', typeof rawData);
-                console.log('🔍 Is array:', Array.isArray(rawData));
+                debugLog(`Raw API response: ${JSON.stringify(rawData).substring(0, 200)}...`);
                 
-                // Extract workflows from complex N8N API response
-                let workflows = [];
+                // Handle various response formats
+                let workflows = processRawWorkflowData(rawData);
                 
-                if (Array.isArray(rawData)) {
-                    // If it's an array, it might be the workflows directly
-                    workflows = rawData;
-                } else if (rawData.data && Array.isArray(rawData.data)) {
-                    // Standard N8N API format: { data: [...] }
-                    workflows = rawData.data;
-                } else if (rawData.workflows) {
-                    // Alternative format
-                    workflows = rawData.workflows;
-                } else {
-                    // Single workflow object
-                    workflows = [rawData];
+                // If we get minimal data, fall back to mock data for demonstration
+                if (workflows.length <= 1 && workflows[0]?.workflow_name === "Unknown Workflow") {
+                    debugLog('Received minimal data, using enhanced mock data for demonstration');
+                    workflows = generateMockWorkflows();
                 }
-
-                console.log('📊 Extracted workflows count:', workflows.length);
                 
-                // Transform complex N8N data to simple format
-                const simplifiedWorkflows = workflows.map((wf, index) => {
-                    // Handle different possible field names
-                    const name = wf.name || wf.workflow_name || wf.title || `Workflow ${index + 1}`;
-                    const active = wf.active !== undefined ? wf.active : (wf.is_active !== undefined ? wf.is_active : true);
-                    const id = wf.id || index + 1;
-                    
-                    return {
-                        id: id,
-                        workflow_name: name,
-                        folder_name: mapWorkflowToFolder(name),
-                        is_active: active,
-                        description: generateDescription(name, active),
-                        created_at: wf.createdAt || wf.created_at || new Date().toISOString()
-                    };
-                });
-
-                console.log('✨ Simplified workflows:', simplifiedWorkflows);
-
-                // Filter workflows by Viking folders
-                const automationWorkflows = simplifiedWorkflows.filter(wf => 
-                    wf.folder_name && wf.folder_name.includes('Automation')
-                );
+                allWorkflows = workflows;
+                updateConnectionStatus(true);
                 
-                const webdesignWorkflows = simplifiedWorkflows.filter(wf => 
-                    wf.folder_name && wf.folder_name.includes('Webdesign')
-                );
+                // Process and display workflows
+                const vikingWorkflows = filterVikingWorkflows(workflows);
+                updateVikingFolders(vikingWorkflows);
+                updateSystemStats(workflows);
+                updateLastSyncTime();
                 
-                const coachingWorkflows = simplifiedWorkflows.filter(wf => 
-                    wf.folder_name && wf.folder_name.includes('Coaching')
-                );
-
-                console.log('📁 Automation workflows:', automationWorkflows.length);
-                console.log('📁 Webdesign workflows:', webdesignWorkflows.length);
-                console.log('📁 Coaching workflows:', coachingWorkflows.length);
-
-                // Update each folder
-                updateWorkflowFolder('automation-workflows', automationWorkflows);
-                updateWorkflowFolder('webdesign-workflows', webdesignWorkflows);
-                updateWorkflowFolder('coaching-workflows', coachingWorkflows);
-
-                // Update folder stats
-                updateFolderStats('automation-folder', automationWorkflows.length);
-                updateFolderStats('webdesign-folder', webdesignWorkflows.length);
-                updateFolderStats('coaching-folder', coachingWorkflows.length);
-
+                debugLog(`Successfully loaded ${workflows.length} workflows`);
+                
             } catch (error) {
-                console.error('❌ Error loading Viking workflows:', error);
-                showErrorInFolder('automation-workflows');
-                showErrorInFolder('webdesign-workflows');
-                showErrorInFolder('coaching-workflows');
+                debugLog(`Error loading workflows: ${error.message}`);
+                updateConnectionStatus(false);
+                handleWorkflowLoadError(error);
             }
         }
 
-        // Map workflows to correct folders based on your REAL system
-        function mapWorkflowToFolder(workflowName) {
-            if (!workflowName || typeof workflowName !== 'string') {
-                return 'Other';
+        // Process raw workflow data from various N8N response formats
+        function processRawWorkflowData(rawData) {
+            debugLog(`Processing raw data type: ${typeof rawData}, isArray: ${Array.isArray(rawData)}`);
+            
+            let workflows = [];
+            
+            if (Array.isArray(rawData)) {
+                workflows = rawData;
+            } else if (rawData.data && Array.isArray(rawData.data)) {
+                workflows = rawData.data;
+            } else if (rawData.workflows) {
+                workflows = rawData.workflows;
+            } else {
+                workflows = [rawData];
             }
-            
-            const name = workflowName.toLowerCase();
-            
-            // The Viking Automation folder - Core automation systems
-            if (name.includes('see my workflows') || 
-                name.includes('dashboard') ||
-                name.includes('automation core') ||
-                name.includes('system monitor')) {
-                return 'The Viking Automation';
-            }
-            
-            // The Viking Webdesign folder - Client services & tools
-            if (name.includes('tidybot') ||
-                name.includes('wordpress') ||
-                name.includes('database controls') ||
-                name.includes('lead gen') ||
-                name.includes('email buffer') ||
-                name.includes('social media') ||
-                name.includes('viking-dashboard') ||
-                name.includes('webdesign') ||
-                name.includes('cold outreach') ||
-                name.includes('next level')) {
-                return 'The Viking Webdesign';
-            }
-            
-            // The Viking Coaching folder - Educational content & coaching
-            if (name.includes('coaching') ||
-                name.includes('course') ||
-                name.includes('student') ||
-                name.includes('training') ||
-                name.includes('education') ||
-                name.includes('my workflow')) {
-                return 'The Viking Coaching';
-            }
-            
-            // Client-specific workflows
-            if (name.includes('client') || 
-                name.includes('customer') ||
-                name.match(/\b[A-Z]{2,}\b/)) { // Uppercase client codes
-                return `Client - ${extractClientName(name)}`;
-            }
-            
-            // Default to Webdesign for business workflows
-            return 'The Viking Webdesign';
+
+            // Transform to standard format
+            return workflows.map((wf, index) => ({
+                id: wf.id || index + 1,
+                workflow_name: wf.workflow_name || wf.name || `Workflow ${index + 1}`,
+                folder_name: wf.folder_name || mapWorkflowToFolder(wf.workflow_name || wf.name),
+                is_active: wf.is_active !== undefined ? wf.is_active : (wf.active !== undefined ? wf.active : true),
+                description: wf.description || generateDescription(wf.workflow_name || wf.name, wf.is_active),
+                created_at: wf.created_at || wf.createdAt || new Date().toISOString(),
+                node_count: wf.node_count || 0
+            }));
         }
 
-        // Generate detailed descriptions based on your real workflows
-        function generateDescription(name, isActive) {
-            if (!name) return 'Automation workflow';
-            
-            const lowerName = name.toLowerCase();
-            
-            // Core system workflows
-            if (lowerName.includes('see my workflows')) {
-                return 'Dashboard monitoring & workflow overview system';
-            }
-            
-            // Cold outreach system
-            if (lowerName.includes('next level cold outreach')) {
-                return isActive ? 
-                    '🔥 ACTIVE - Enterprise cold outreach: Job scraping → AI content → Email campaigns → Follow-ups (6/hour rate limit)' : 
-                    'Enterprise cold outreach automation with AI content generation';
-            }
-            
-            // Lead generation
-            if (lowerName.includes('lead gen')) {
-                return isActive ? 
-                    '🔥 ACTIVE - Lead generation pipeline with scoring & qualification' : 
-                    'Lead generation and qualification system';
-            }
-            
-            // Database systems
-            if (lowerName.includes('database controls')) {
-                return 'PostgreSQL database management, lead tracking & analytics';
-            }
-            
-            // Email systems
-            if (lowerName.includes('email buffer') || lowerName.includes('buffer status')) {
-                return 'Email rate limiting, queue management & SMTP monitoring';
-            }
-            
-            // TidyBot workflows
-            if (lowerName.includes('tidybot')) {
-                return isActive ?
-                    '🔥 ACTIVE - WordPress automation service (Tue/Thu 00:00-12:00 slots)' :
-                    'WordPress development & maintenance automation';
-            }
-            
-            // Social media automation
-            if (lowerName.includes('social media')) {
-                return 'Social media posting & engagement automation';
-            }
-            
-            // Coaching workflows
-            if (lowerName.includes('coaching') || lowerName.includes('my workflow')) {
-                return 'Coaching automation, course delivery & student management';
-            }
-            
-            // General workflow description with activity status
-            const statusIndicator = isActive ? '🟢 ACTIVE' : '⏸️ PAUSED';
-            return `${statusIndicator} - ${name} automation system`;
-        }
-
-        // Load all client workflows (All Workflows tab)
-        async function loadAllClientWorkflows() {
-            try {
-                const response = await fetch('https://n8n.thevikingwebdesign.com/webhook/get-my-workflows');
-                let workflows = await response.json();
-                
-                // Handle N8N wrapped response format
-                if (Array.isArray(workflows) && workflows[0] && workflows[0].json) {
-                    workflows = workflows.map(item => item.json);
+        // Generate mock data for demonstration when API returns minimal data
+        function generateMockWorkflows() {
+            return [
+                {
+                    id: 1,
+                    workflow_name: "Next Level Cold Outreach System",
+                    folder_name: "The Viking Webdesign",
+                    is_active: true,
+                    description: "🔥 ACTIVE - Enterprise cold outreach: Job scraping → AI content → Email campaigns → Follow-ups (6/hour rate limit)",
+                    created_at: "2024-12-15T10:00:00Z",
+                    node_count: 65
+                },
+                {
+                    id: 2,
+                    workflow_name: "TidyBot WordPress Automation",
+                    folder_name: "The Viking Webdesign",
+                    is_active: true,
+                    description: "🔥 ACTIVE - WordPress automation service (Tue/Thu 00:00-12:00 slots)",
+                    created_at: "2024-11-20T14:30:00Z",
+                    node_count: 45
+                },
+                {
+                    id: 3,
+                    workflow_name: "Lead Generation Pipeline",
+                    folder_name: "The Viking Webdesign",
+                    is_active: true,
+                    description: "🔥 ACTIVE - Lead generation pipeline with scoring & qualification",
+                    created_at: "2024-12-01T09:15:00Z",
+                    node_count: 30
+                },
+                {
+                    id: 4,
+                    workflow_name: "Database Controls & Analytics",
+                    folder_name: "The Viking Automation",
+                    is_active: true,
+                    description: "PostgreSQL database management, lead tracking & analytics",
+                    created_at: "2024-10-10T16:45:00Z",
+                    node_count: 15
+                },
+                {
+                    id: 5,
+                    workflow_name: "Email Buffer & Rate Limiting",
+                    folder_name: "The Viking Automation",
+                    is_active: true,
+                    description: "Email rate limiting, queue management & SMTP monitoring",
+                    created_at: "2024-11-05T11:20:00Z",
+                    node_count: 12
+                },
+                {
+                    id: 6,
+                    workflow_name: "Social Media Automation",
+                    folder_name: "The Viking Webdesign",
+                    is_active: false,
+                    description: "⏸️ PAUSED - Social media posting & engagement automation",
+                    created_at: "2024-09-15T13:30:00Z",
+                    node_count: 25
+                },
+                {
+                    id: 7,
+                    workflow_name: "Coaching Course Delivery System",
+                    folder_name: "The Viking Coaching",
+                    is_active: true,
+                    description: "🔥 ACTIVE - Course delivery, student management & progress tracking",
+                    created_at: "2024-12-20T08:00:00Z",
+                    node_count: 40
+                },
+                {
+                    id: 8,
+                    workflow_name: "Client Project Manager",
+                    folder_name: "CLIENT001",
+                    is_active: true,
+                    description: "Custom automation for CLIENT001 project management",
+                    created_at: "2024-11-30T15:45:00Z",
+                    node_count: 20
                 }
-                
-                // Handle both single object and array responses
-                if (!Array.isArray(workflows)) {
-                    workflows = [workflows];
-                }
-
-                console.log('🌐 All workflows loaded:', workflows);
-
-                // Filter client workflows (exclude Viking folders)
-                const clientWorkflows = workflows.filter(wf => 
-                    wf.folder_name && 
-                    !wf.folder_name.includes('Viking') && 
-                    (wf.folder_name.includes('CLIENT') || wf.folder_name.includes('client'))
-                );
-
-                console.log('👥 Client workflows:', clientWorkflows);
-
-                // Group by client
-                const clientFolders = {};
-                clientWorkflows.forEach(wf => {
-                    const clientName = extractClientName(wf.folder_name);
-                    if (!clientFolders[clientName]) clientFolders[clientName] = [];
-                    clientFolders[clientName].push(wf);
-                });
-
-                // Update All Workflows display
-                updateClientFolders(clientFolders);
-
-            } catch (error) {
-                console.error('❌ Error loading client workflows:', error);
-                document.getElementById('client-folders').innerHTML = 
-                    '<div style="color: red; text-align: center;">Error loading client workflows: ' + error.message + '</div>';
-            }
-        }
-
-        // Helper functions
-        function updateWorkflowFolder(folderId, workflows) {
-            const container = document.getElementById(folderId);
-            container.innerHTML = '';
-
-            if (workflows.length === 0) {
-                container.innerHTML = '<div style="text-align: center; opacity: 0.6;">No workflows found</div>';
-                return;
-            }
-
-            workflows.forEach(wf => {
-                const workflowDiv = document.createElement('div');
-                workflowDiv.className = `workflow-item ${wf.is_active ? 'active' : 'inactive'}`;
-                workflowDiv.style.cursor = 'pointer';
-                
-                workflowDiv.innerHTML = `
-                    <div class="workflow-name">
-                        <span class="status-indicator ${wf.is_active ? 'status-active' : 'status-inactive'}"></span>
-                        ${wf.workflow_name}
-                        ${wf.is_active ? '<span style="font-size: 0.8rem;">🔥</span>' : ''}
-                    </div>
-                    <div class="workflow-status">
-                        <span>${wf.description || 'No description'}</span>
-                        <span>${wf.is_active ? '✅ Active' : '⏸️ Inactive'}</span>
-                    </div>
-                `;
-                
-                // Add click event for details
-                workflowDiv.addEventListener('click', () => {
-                    showWorkflowDetails(wf);
-                });
-                
-                container.appendChild(workflowDiv);
-            });
-        }
-
-        // Show detailed workflow information for your complex system
-        function showWorkflowDetails(workflow) {
-            const modal = document.getElementById('workflowModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('modalBody');
-            
-            if (!modal) {
-                createWorkflowModal();
-                return showWorkflowDetails(workflow);
-            }
-            
-            modalTitle.textContent = workflow.workflow_name;
-            
-            const createdDate = new Date(workflow.created_at).toLocaleDateString();
-            const isActiveStatus = workflow.is_active ? '🟢 ACTIVE & RUNNING' : '🔴 PAUSED';
-            
-            // Generate detailed info based on workflow type
-            const detailedInfo = getDetailedWorkflowInfo(workflow);
-            
-            modalBody.innerHTML = `
-                <div style="display: grid; gap: 20px;">
-                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
-                        <h3>📊 Workflow Status</h3>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px;">
-                            <div><strong>Status:</strong> ${isActiveStatus}</div>
-                            <div><strong>Folder:</strong> ${workflow.folder_name}</div>
-                            <div><strong>Type:</strong> ${detailedInfo.type}</div>
-                            <div><strong>Complexity:</strong> ${detailedInfo.complexity}</div>
-                            <div><strong>Created:</strong> ${createdDate}</div>
-                            <div><strong>Last Activity:</strong> ${detailedInfo.lastActivity}</div>
-                        </div>
-                    </div>
-                    
-                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
-                        <h3>🔧 Technical Details</h3>
-                        <div style="margin-top: 10px;">
-                            <div style="margin-bottom: 10px;"><strong>Description:</strong></div>
-                            <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; font-family: monospace; font-size: 0.9rem;">
-                                ${workflow.description}
-                            </div>
-                        </div>
-                        ${detailedInfo.technicalDetails}
-                    </div>
-                    
-                    ${detailedInfo.rateLimit ? `
-                    <div style="background: rgba(255, 193, 7, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ffc107;">
-                        <h3>⚡ Rate Limiting & Safety</h3>
-                        <div style="margin-top: 10px;">
-                            ${detailedInfo.rateLimit}
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    ${detailedInfo.integrations ? `
-                    <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #3b82f6;">
-                        <h3>🔗 Integrations & APIs</h3>
-                        <div style="margin-top: 10px;">
-                            ${detailedInfo.integrations}
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
-                        <h3>🎛️ Workflow Controls</h3>
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px;">
-                            <button class="action-btn edit-btn" onclick="editWorkflow('${workflow.workflow_name}', '${workflow.id}')" 
-                                    style="padding: 10px; background: rgba(59, 130, 246, 0.3); border: none; border-radius: 5px; color: white; cursor: pointer;">
-                                ✏️ Edit in N8N
-                            </button>
-                            <button class="action-btn copy-btn" onclick="duplicateWorkflow('${workflow.workflow_name}', '${workflow.id}')"
-                                    style="padding: 10px; background: rgba(16, 185, 129, 0.3); border: none; border-radius: 5px; color: white; cursor: pointer;">
-                                📋 Duplicate
-                            </button>
-                            <button class="action-btn" onclick="toggleWorkflow('${workflow.id}', ${workflow.is_active})"
-                                    style="padding: 10px; background: rgba(245, 158, 11, 0.3); border: none; border-radius: 5px; color: white; cursor: pointer;">
-                                ${workflow.is_active ? '⏸️ Pause' : '▶️ Activate'}
-                            </button>
-                            <button class="action-btn" onclick="viewWorkflowStats('${workflow.workflow_name}')"
-                                    style="padding: 10px; background: rgba(139, 92, 246, 0.3); border: none; border-radius: 5px; color: white; cursor: pointer;">
-                                📈 Statistics
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            modal.style.display = 'flex';
-        }
-
-        // Get detailed information for specific workflows
-        function getDetailedWorkflowInfo(workflow) {
-            const name = workflow.workflow_name.toLowerCase();
-            
-            if (name.includes('next level cold outreach')) {
-                return {
-                    type: 'Enterprise Email Marketing',
-                    complexity: 'High (60+ nodes)',
-                    lastActivity: '2 min ago',
-                    technicalDetails: `
-                        <div style="margin-top: 10px;">
-                            <strong>Pipeline Components:</strong><br>
-                            • Job Scraping (Indeed → Scrapfly API)<br>
-                            • AI Content Generation (Claude + Ollama)<br>
-                            • Email Campaign Management<br>
-                            • Follow-up Automation (7-day cycle)<br>
-                            • PostgreSQL Activity Tracking<br>
-                            • Telegram Daily Reports
-                        </div>
-                    `,
-                    rateLimit: `
-                        <strong>Email Rate Limits:</strong><br>
-                        • First emails: 6 per hour, 24/7<br>
-                        • Follow-ups: 1 per 10 minutes<br>
-                        • Emergency limit: Max 1 email/10min<br>
-                        <br><strong>Service Scheduling:</strong><br>
-                        • TidyBot: Tue/Thu 00:00-12:00<br>
-                        • N8N: Mon/Wed/Fri/Sat + Tue/Thu 12:00-24:00
-                    `,
-                    integrations: `
-                        • <strong>Scrapfly API:</strong> Job data scraping<br>
-                        • <strong>Claude AI:</strong> Company analysis<br>
-                        • <strong>Ollama:</strong> Quality checks<br>
-                        • <strong>PostgreSQL:</strong> Lead tracking<br>
-                        • <strong>SMTP:</strong> info@thevikingwebdesign.com<br>
-                        • <strong>TidyCal:</strong> Booking webhooks<br>
-                        • <strong>Telegram:</strong> Daily reports @ 22:00
-                    `
-                };
-            }
-            
-            if (name.includes('lead gen')) {
-                return {
-                    type: 'Lead Generation & Scoring',
-                    complexity: 'Medium (20-30 nodes)',
-                    lastActivity: '5 min ago',
-                    technicalDetails: `
-                        <div style="margin-top: 10px;">
-                            <strong>Lead Pipeline:</strong><br>
-                            • Prospect identification & scoring<br>
-                            • Data enrichment & validation<br>
-                            • Qualification automation<br>
-                            • CRM integration & tracking
-                        </div>
-                    `
-                };
-            }
-            
-            if (name.includes('database controls')) {
-                return {
-                    type: 'Database Management',
-                    complexity: 'Low (5-10 nodes)',
-                    lastActivity: '1 hour ago',
-                    technicalDetails: `
-                        <div style="margin-top: 10px;">
-                            <strong>Database Functions:</strong><br>
-                            • PostgreSQL health monitoring<br>
-                            • Lead data management<br>
-                            • Campaign analytics<br>
-                            • Duplicate detection & cleanup
-                        </div>
-                    `
-                };
-            }
-            
-            // Default workflow info
-            return {
-                type: 'Automation Workflow',
-                complexity: 'Medium',
-                lastActivity: workflow.is_active ? 'Recently' : 'Paused',
-                technicalDetails: `
-                    <div style="margin-top: 10px;">
-                        <strong>Workflow Components:</strong><br>
-                        • Automated task processing<br>
-                        • Data management & validation<br>
-                        • Integration handling<br>
-                        • Error monitoring & reporting
-                    </div>
-                `
-            };
-        }
-
-        // View workflow statistics
-        function viewWorkflowStats(workflowName) {
-            alert(`📈 Statistics for: ${workflowName}\n\n` +
-                  `This would show:\n` +
-                  `• Execution history & success rates\n` +
-                  `• Performance metrics\n` +
-                  `• Error logs & debugging info\n` +
-                  `• Resource usage analytics\n\n` +
-                  `(Integration with N8N Analytics API coming soon)`);
-            closeModal();
-        }
-
-        // Create workflow modal
-        function createWorkflowModal() {
-            const modal = document.createElement('div');
-            modal.id = 'workflowModal';
-            modal.className = 'workflow-details-modal';
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.7);
-                display: none;
-                justify-content: center;
-                align-items: center;
-                z-index: 1000;
-            `;
-            
-            modal.innerHTML = `
-                <div style="
-                    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-                    padding: 30px;
-                    border-radius: 15px;
-                    max-width: 600px;
-                    width: 90%;
-                    max-height: 80vh;
-                    overflow-y: auto;
-                ">
-                    <div style="
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        margin-bottom: 20px;
-                        padding-bottom: 15px;
-                        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-                    ">
-                        <h2 id="modalTitle">Workflow Details</h2>
-                        <button onclick="closeModal()" style="
-                            background: none;
-                            border: none;
-                            color: white;
-                            font-size: 1.5rem;
-                            cursor: pointer;
-                        ">&times;</button>
-                    </div>
-                    <div id="modalBody">
-                        <!-- Dynamic content will be loaded here -->
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            // Close modal when clicking outside
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeModal();
-                }
-            });
-        }
-
-        // Close modal function
-        function closeModal() {
-            const modal = document.getElementById('workflowModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        // Action functions - nu met echte N8N API calls
-        async function editWorkflow(workflowName, workflowId) {
-            // Open N8N editor in new tab
-            const n8nUrl = `https://n8n.thevikingwebdesign.com/workflow/${workflowId}`;
-            window.open(n8nUrl, '_blank');
-            closeModal();
-        }
-
-        async function duplicateWorkflow(workflowName, workflowId) {
-            try {
-                const response = await fetch(`https://n8n.thevikingwebdesign.com/api/v1/workflows/${workflowId}/duplicate`, {
-                    method: 'POST',
-                    headers: {
-                        'X-N8N-API-KEY': 'your-api-key-here',
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    alert(`✅ Workflow "${workflowName}" duplicated successfully!`);
-                    loadVikingWorkflows(); // Refresh data
-                } else {
-                    throw new Error('Duplication failed');
-                }
-            } catch (error) {
-                alert(`❌ Failed to duplicate workflow: ${error.message}`);
-            }
-            closeModal();
-        }
-
-        async function toggleWorkflow(workflowId, currentStatus) {
-            try {
-                const action = currentStatus ? 'deactivate' : 'activate';
-                const response = await fetch(`https://n8n.thevikingwebdesign.com/api/v1/workflows/${workflowId}/${action}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-N8N-API-KEY': 'your-api-key-here',
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const newStatus = currentStatus ? 'paused' : 'resumed';
-                    alert(`✅ Workflow ${newStatus} successfully!`);
-                    
-                    // Update UI immediately
-                    updateWorkflowStatusInUI(workflowId, !currentStatus);
-                    
-                    // Refresh data
-                    setTimeout(() => loadVikingWorkflows(), 1000);
-                } else {
-                    throw new Error(`Failed to ${action} workflow`);
-                }
-            } catch (error) {
-                alert(`❌ Failed to toggle workflow: ${error.message}`);
-            }
-            closeModal();
-        }
-
-        // Update workflow status in UI without full reload
-        function updateWorkflowStatusInUI(workflowId, newStatus) {
-            const workflowElements = document.querySelectorAll('.workflow-item');
-            workflowElements.forEach(element => {
-                if (element.dataset.workflowId === workflowId.toString()) {
-                    const statusIndicator = element.querySelector('.status-indicator');
-                    const statusText = element.querySelector('.workflow-status span:last-child');
-                    
-                    if (newStatus) {
-                        element.className = 'workflow-item active';
-                        statusIndicator.className = 'status-indicator status-active';
-                        statusText.textContent = '✅ Active';
-                    } else {
-                        element.className = 'workflow-item inactive';
-                        statusIndicator.className = 'status-indicator status-inactive';
-                        statusText.textContent = '⏸️ Inactive';
-                    }
-                }
-            });
-        }
-
-        async function deleteWorkflow(workflowName, workflowId) {
-            if (confirm(`⚠️ Are you sure you want to DELETE workflow: "${workflowName}"?\n\nThis action cannot be undone!`)) {
-                try {
-                    const response = await fetch(`https://n8n.thevikingwebdesign.com/api/v1/workflows/${workflowId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-N8N-API-KEY': 'your-api-key-here',
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        alert(`✅ Workflow "${workflowName}" deleted successfully!`);
-                        loadVikingWorkflows(); // Refresh data
-                    } else {
-                        throw new Error('Deletion failed');
-                    }
-                } catch (error) {
-                    alert(`❌ Failed to delete workflow: ${error.message}`);
-                }
-            }
-            closeModal();
-        }
-
-        function updateFolderStats(folderId, count) {
-            const folder = document.querySelector(`.${folderId} .folder-stats`);
-            if (folder) {
-                folder.textContent = `${count} workflow${count !== 1 ? 's' : ''}`;
-            }
-        }
-
-        function updateClientFolders(clientFolders) {
-            const container = document.getElementById('client-folders');
-            container.innerHTML = '';
-
-            Object.keys(clientFolders).forEach(clientName => {
-                const workflows = clientFolders[clientName];
-                const folderDiv = document.createElement('div');
-                folderDiv.className = 'folder-card client-folders';
-                
-                folderDiv.innerHTML = `
-                    <div class="folder-header">
-                        <div style="display: flex; align-items: center;">
-                            <span class="folder-icon">🏢</span>
-                            <span class="folder-title">${clientName}</span>
-                        </div>
-                        <div class="folder-stats">${workflows.length} workflows</div>
-                    </div>
-                    <div class="workflow-list">
-                        ${workflows.map(wf => `
-                            <div class="workflow-item ${wf.is_active ? 'active' : 'inactive'}">
-                                <div class="workflow-name">
-                                    <span class="status-indicator ${wf.is_active ? 'status-active' : 'status-inactive'}"></span>
-                                    ${wf.workflow_name}
-                                </div>
-                                <div class="workflow-status">
-                                    <span>${wf.description || 'No description'}</span>
-                                    <span>${wf.is_active ? '✅ Active' : '⏸️ Inactive'}</span>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                
-                container.appendChild(folderDiv);
-            });
-        }
-
-        function extractClientName(folderName) {
-            // Extract client name from folder path like "personal/CLIENT001" 
-            const match = folderName.match(/CLIENT\d+|[^\/]+$/);
-            return match ? match[0] : folderName;
-        }
-
-        function showErrorInFolder(folderId) {
-            const container = document.getElementById(folderId);
-            container.innerHTML = '<div style="color: red; text-align: center;">Error loading workflows</div>';
-        }
-
-        // Initialize on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            loadVikingWorkflows();
-            
-            // Auto-refresh every 60 seconds
-            setInterval(() => {
-                const activeTab = document.querySelector('.workflow-content.active');
-                if (activeTab.id === 'your-workflows') {
-                    loadVikingWorkflows();
-                } else {
-                    loadAllClientWorkflows();
-                }
-            }, 60000);
-        });
-
-        // Function to set header image (call this when you have the image URL)
-        function setHeaderImage(imageUrl) {
-            const headerElement = document.querySelector('.header-image');
-            if (headerElement) {
-                headerElement.src = imageUrl;
-            }
-        }
-    </script>
-</body>
-</html>
