@@ -196,9 +196,10 @@
 
         <div class="login-section">
             <h2>Client Dashboard Access</h2>
-            <p style="margin-bottom: 20px;">Enter your unique client ID to view your statistics</p>
+            <p style="margin-bottom: 20px;">Enter your client credentials to view your statistics</p>
             <div class="client-input">
-                <input type="text" id="clientId" placeholder="Client ID (e.g: VIKING001)" />
+                <input type="text" id="clientId" placeholder="Client ID (e.g: CLIENT001)" />
+                <input type="password" id="clientPassword" placeholder="Password" />
                 <button onclick="loadClientData()">📊 Load Dashboard</button>
             </div>
         </div>
@@ -355,9 +356,10 @@
         // Simulated client data - in real implementation, this would come from your N8N/database
         const clientData = {
             'VIKING001': {
-                name: 'ABC Company B.V.',
-                package: 'Pro Lead Generation',
-                since: 'Jan 15, 2024',
+                name: 'The Viking Webdesign',
+                package: 'Owner Full Access',
+                since: 'Jul 04, 2025',
+                password: 'viking2025',
                 workflows: 8,
                 executions: 1247,
                 successRate: 98.2,
@@ -369,10 +371,11 @@
                 emailsClicked: 23,
                 emailsReplied: 7
             },
-            'VIKING002': {
-                name: 'XYZ Startup',
-                package: 'Basic Email Marketing',
-                since: 'Feb 03, 2024',
+            'CLIENT001': {
+                name: 'ABC Company B.V.',
+                package: 'Pro Lead Generation',
+                since: 'Jan 15, 2024',
+                password: 'client123',
                 workflows: 5,
                 executions: 892,
                 successRate: 95.8,
@@ -383,6 +386,22 @@
                 emailsOpened: 54,
                 emailsClicked: 12,
                 emailsReplied: 4
+            },
+            'CLIENT002': {
+                name: 'XYZ Startup',
+                package: 'Basic Email Marketing',
+                since: 'Feb 03, 2024',
+                password: 'startup456',
+                workflows: 3,
+                executions: 445,
+                successRate: 92.1,
+                newLeads: 8,
+                qualifiedLeads: 6,
+                totalLeads: 234,
+                emailsSent: 45,
+                emailsOpened: 28,
+                emailsClicked: 7,
+                emailsReplied: 2
             }
         };
 
@@ -390,9 +409,16 @@
 
         function loadClientData() {
             const clientId = document.getElementById('clientId').value.toUpperCase();
+            const clientPassword = document.getElementById('clientPassword').value;
             
             if (!clientData[clientId]) {
-                alert('Client ID not found. Try: VIKING001 or VIKING002');
+                alert('Client ID not found. Try: VIKING001, CLIENT001, or CLIENT002');
+                return;
+            }
+
+            // Check password
+            if (clientData[clientId].password !== clientPassword) {
+                alert('Incorrect password. Please try again.');
                 return;
             }
 
@@ -526,6 +552,7 @@
             // Auto-load demo data
             setTimeout(() => {
                 document.getElementById('clientId').value = 'VIKING001';
+                document.getElementById('clientPassword').value = 'viking2025';
                 loadClientData();
             }, 1000);
         }
