@@ -331,6 +331,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             z-index: 1000;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
         }
 
         .logout-btn:hover {
@@ -404,7 +405,7 @@
             </div>
         </div>
 
-        <button class="logout-btn" onclick="sessionStorage.clear(); location.reload();">
+        <button class="logout-btn" onclick="window.location.href='/';">
             🚪 Logout
         </button>
 
@@ -507,12 +508,20 @@
                 const response = await fetch('https://n8n.thevikingwebdesign.com/webhook/get-my-workflows');
                 let workflows = await response.json();
                 
+                console.log('🔍 Raw API response:', workflows);
+                
+                // Handle N8N wrapped response format
+                if (Array.isArray(workflows) && workflows[0] && workflows[0].json) {
+                    workflows = workflows.map(item => item.json);
+                    console.log('🧹 Cleaned workflows:', workflows);
+                }
+                
                 // Handle both single object and array responses
                 if (!Array.isArray(workflows)) {
                     workflows = [workflows];
                 }
 
-                console.log('🔍 Loaded workflows:', workflows);
+                console.log('📊 Final workflows data:', workflows);
 
                 // Filter workflows by Viking folders (flexible folder matching)
                 const automationWorkflows = workflows.filter(wf => 
@@ -564,6 +573,11 @@
                 const response = await fetch('https://n8n.thevikingwebdesign.com/webhook/get-my-workflows');
                 let workflows = await response.json();
                 
+                // Handle N8N wrapped response format
+                if (Array.isArray(workflows) && workflows[0] && workflows[0].json) {
+                    workflows = workflows.map(item => item.json);
+                }
+                
                 // Handle both single object and array responses
                 if (!Array.isArray(workflows)) {
                     workflows = [workflows];
@@ -611,6 +625,8 @@
             workflows.forEach(wf => {
                 const workflowDiv = document.createElement('div');
                 workflowDiv.className = `workflow-item ${wf.is_active ? 'active' : 'inactive'}`;
+                workflowDiv.style.cursor = 'pointer';
+                
                 workflowDiv.innerHTML = `
                     <div class="workflow-name">
                         <span class="status-indicator ${wf.is_active ? 'status-active' : 'status-inactive'}"></span>
@@ -622,8 +638,186 @@
                         <span>${wf.is_active ? '✅ Active' : '⏸️ Inactive'}</span>
                     </div>
                 `;
+                
+                // Add click event for details
+                workflowDiv.addEventListener('click', () => {
+                    showWorkflowDetails(wf);
+                });
+                
                 container.appendChild(workflowDiv);
             });
+        }
+
+        // Show workflow details modal
+        function showWorkflowDetails(workflow) {
+            const modal = document.getElementById('workflowModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            if (!modal) {
+                // Create modal if it doesn't exist
+                createWorkflowModal();
+                return showWorkflowDetails(workflow);
+            }
+            
+            modalTitle.textContent = workflow.workflow_name;
+            
+            const createdDate = new Date(workflow.created_at).toLocaleDateString();
+            const lastRun = workflow.is_active ? 'Recently' : 'Not running';
+            
+            modalBody.innerHTML = `
+                <div style="display: grid; gap: 20px;">
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
+                        <h3>📊 Workflow Information</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px;">
+                            <div><strong>Status:</strong> ${workflow.is_active ? '🟢 Active' : '🔴 Inactive'}</div>
+                            <div><strong>Folder:</strong> ${workflow.folder_name}</div>
+                            <div><strong>Category:</strong> ${workflow.category || 'General'}</div>
+                            <div><strong>Created:</strong> ${createdDate}</div>
+                            <div><strong>Workflow ID:</strong> ${workflow.id}</div>
+                            <div><strong>Last Run:</strong> ${lastRun}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
+                        <h3>📝 Description</h3>
+                        <p style="margin-top: 10px; line-height: 1.5;">
+                            ${workflow.description || 'No description available'}
+                        </p>
+                    </div>
+                    
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
+                        <h3>🔧 Actions</h3>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px;">
+                            <button class="action-btn edit-btn" onclick="editWorkflow('${workflow.workflow_name}')" 
+                                    style="padding: 10px; background: rgba(59, 130, 246, 0.3); border: none; border-radius: 5px; color: white; cursor: pointer;">
+                                ✏️ Edit
+                            </button>
+                            <button class="action-btn copy-btn" onclick="duplicateWorkflow('${workflow.workflow_name}')"
+                                    style="padding: 10px; background: rgba(16, 185, 129, 0.3); border: none; border-radius: 5px; color: white; cursor: pointer;">
+                                📋 Duplicate
+                            </button>
+                            <button class="action-btn" onclick="toggleWorkflow('${workflow.id}')"
+                                    style="padding: 10px; background: rgba(245, 158, 11, 0.3); border: none; border-radius: 5px; color: white; cursor: pointer;">
+                                ${workflow.is_active ? '⏸️ Pause' : '▶️ Start'}
+                            </button>
+                            <button class="action-btn delete-btn" onclick="deleteWorkflow('${workflow.workflow_name}')"
+                                    style="padding: 10px; background: rgba(239, 68, 68, 0.3); border: none; border-radius: 5px; color: white; cursor: pointer;">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
+                        <h3>📈 Recent Activity</h3>
+                        <div style="margin-top: 15px;">
+                            <div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                📅 Created on ${createdDate}
+                            </div>
+                            <div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                ${workflow.is_active ? '🟢 Currently running' : '⏸️ Currently paused'}
+                            </div>
+                            <div style="padding: 8px 0;">
+                                📁 Located in ${workflow.folder_name}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        // Create workflow modal
+        function createWorkflowModal() {
+            const modal = document.createElement('div');
+            modal.id = 'workflowModal';
+            modal.className = 'workflow-details-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                    padding: 30px;
+                    border-radius: 15px;
+                    max-width: 600px;
+                    width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                ">
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 20px;
+                        padding-bottom: 15px;
+                        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                    ">
+                        <h2 id="modalTitle">Workflow Details</h2>
+                        <button onclick="closeModal()" style="
+                            background: none;
+                            border: none;
+                            color: white;
+                            font-size: 1.5rem;
+                            cursor: pointer;
+                        ">&times;</button>
+                    </div>
+                    <div id="modalBody">
+                        <!-- Dynamic content will be loaded here -->
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        }
+
+        // Close modal function
+        function closeModal() {
+            const modal = document.getElementById('workflowModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Action functions (placeholder implementations)
+        function editWorkflow(workflowName) {
+            alert(`Edit workflow: ${workflowName}\n\nThis would open the N8N editor.`);
+            closeModal();
+        }
+
+        function duplicateWorkflow(workflowName) {
+            alert(`Duplicate workflow: ${workflowName}\n\nThis would create a copy of the workflow.`);
+            closeModal();
+        }
+
+        function toggleWorkflow(workflowId) {
+            alert(`Toggle workflow: ${workflowId}\n\nThis would start/pause the workflow.`);
+            closeModal();
+        }
+
+        function deleteWorkflow(workflowName) {
+            if (confirm(`Are you sure you want to delete: ${workflowName}?`)) {
+                alert(`Delete workflow: ${workflowName}\n\nThis would delete the workflow.`);
+                closeModal();
+            }
         }
 
         function updateFolderStats(folderId, count) {
