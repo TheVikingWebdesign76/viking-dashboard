@@ -186,6 +186,7 @@
         .admin-panel {
             border: 2px solid #ff6b35;
             background: rgba(255, 107, 53, 0.1);
+            grid-column: 1 / -1;
         }
 
         .admin-section {
@@ -308,6 +309,8 @@
             padding: 5px 10px;
             font-size: 12px;
         }
+
+        @media (max-width: 768px) {
             .client-input {
                 flex-direction: column;
             }
@@ -319,6 +322,10 @@
             .stat-grid {
                 grid-template-columns: 1fr;
             }
+
+            .form-row {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -327,6 +334,22 @@
         <div class="header">
             <div class="logo">⚔️ The Viking Webdesign</div>
             <div>N8N Lead Generation & Email Marketing Dashboard</div>
+        </div>
+
+        <div class="login-section" id="loginSection">
+            <h2>🔐 Secure Client Login</h2>
+            <p style="margin-bottom: 20px;">Enter your credentials to access your dashboard</p>
+            <div class="client-input">
+                <input type="text" id="clientId" placeholder="Client ID" />
+                <input type="password" id="clientPassword" placeholder="Password" />
+                <button onclick="authenticateClient()" id="loginBtn">
+                    <span id="loginText">📊 Login</span>
+                </button>
+            </div>
+            <div id="errorMessage"></div>
+        </div>
+
+        <div class="dashboard" id="dashboard">
             <!-- Admin Panel (Only for VIKING001) -->
             <div class="card admin-panel" id="adminPanel" style="display: none;">
                 <h3>⚔️ Admin Panel</h3>
@@ -378,20 +401,6 @@
                 </div>
             </div>
 
-        <div class="login-section" id="loginSection">
-            <h2>🔐 Secure Client Login</h2>
-            <p style="margin-bottom: 20px;">Enter your credentials to access your dashboard</p>
-            <div class="client-input">
-                <input type="text" id="clientId" placeholder="Client ID" />
-                <input type="password" id="clientPassword" placeholder="Password" />
-                <button onclick="authenticateClient()" id="loginBtn">
-                    <span id="loginText">📊 Login</span>
-                </button>
-            </div>
-            <div id="errorMessage"></div>
-        </div>
-
-        <div class="dashboard" id="dashboard">
             <!-- Client Info -->
             <div class="card">
                 <h3>👤 Client Information</h3>
@@ -478,11 +487,11 @@
 
     <script>
         // N8N API Configuration
-        const N8N_API_BASE = 'https://n8n.thevikingwebdesign.com/webhook';  // YOUR N8N URL
+        const N8N_API_BASE = 'https://n8n.thevikingwebdesign.com/webhook';
         
         let currentSession = null;
 
-        // Test function with fallback
+        // Authentication function with debug logging
         async function authenticateClient() {
             const clientId = document.getElementById('clientId').value.trim();
             const password = document.getElementById('clientPassword').value.trim();
@@ -503,7 +512,9 @@
             document.getElementById('loginText').innerHTML = '<span class="loading"></span> Authenticating...';
             
             try {
-                // First try N8N API
+                console.log('Attempting N8N authentication...');
+                
+                // Call N8N authentication API
                 const response = await fetch(`${N8N_API_BASE}/client-login`, {
                     method: 'POST',
                     headers: {
@@ -515,28 +526,40 @@
                     })
                 });
                 
+                console.log('N8N Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('N8N Response data:', data);
                 
                 if (data.success) {
                     // Authentication successful
+                    console.log('✅ N8N Authentication successful');
                     currentSession = data;
                     showDashboard(data);
                     loadDemoData(data.client_id || clientId);
                 } else {
                     // Authentication failed
+                    console.log('❌ N8N Authentication failed:', data.message);
                     showError(data.message || 'Invalid credentials');
                 }
                 
             } catch (error) {
                 console.error('N8N API error:', error);
+                console.log('🔄 Falling back to local authentication');
                 
-                // Fallback to local authentication for testing
+                // Fallback to local authentication
                 const localAuth = authenticateLocally(clientId, password);
                 if (localAuth.success) {
+                    console.log('✅ Local authentication successful');
                     currentSession = localAuth;
                     showDashboard(localAuth);
                     loadDemoData(localAuth.client_id);
                 } else {
+                    console.log('❌ Local authentication failed');
                     showError('Connection error. Please check your credentials and try again.');
                 }
             } finally {
@@ -571,12 +594,15 @@
         
         // Show dashboard after successful login
         function showDashboard(sessionData) {
+            console.log('📊 Showing dashboard for:', sessionData.client_name);
+            
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboard').classList.add('active');
             document.getElementById('logoutBtn').classList.add('active');
             
             // Show admin panel only for VIKING001
             if (sessionData.client_id === 'VIKING001') {
+                console.log('⚔️ Showing admin panel');
                 document.getElementById('adminPanel').style.display = 'block';
                 loadClientsList();
             }
@@ -588,60 +614,10 @@
             document.getElementById('sessionInfo').textContent = 'Secure connection ✅';
         }
         
-        // Load real client data from N8N
-        async function loadClientData(sessionData) {
-            try {
-                // Call your existing dashboard data API
-                const response = await fetch(`${N8N_API_BASE}/dashboard-webhook`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${sessionData.session_token}`
-                    },
-                    body: JSON.stringify({
-                        client_id: sessionData.client_id
-                    })
-                });
-                
-                const dashboardData = await response.json();
-                
-                if (dashboardData) {
-                    updateDashboardStats(dashboardData);
-                }
-                
-            } catch (error) {
-                console.error('Failed to load dashboard data:', error);
-                // Fall back to demo data
-                loadDemoData(sessionData.client_id);
-            }
-        }
-        
-        // Update dashboard with real data
-        function updateDashboardStats(data) {
-            if (data.workflow_stats) {
-                document.getElementById('activeWorkflows').textContent = data.workflow_stats.active_workflows || '-';
-                document.getElementById('totalExecutions').textContent = (data.workflow_stats.total_executions || 0).toLocaleString();
-                document.getElementById('successRate').textContent = (data.workflow_stats.success_rate || 0) + '%';
-                document.getElementById('lastRun').textContent = (data.workflow_stats.last_run_minutes || 0) + ' min';
-            }
-            
-            if (data.lead_stats) {
-                document.getElementById('newLeads').textContent = data.lead_stats.new_leads_today || 0;
-                document.getElementById('qualifiedLeads').textContent = data.lead_stats.qualified_leads_today || 0;
-                document.getElementById('totalLeads').textContent = (data.lead_stats.total_database || 0).toLocaleString();
-                document.getElementById('conversionRate').textContent = (data.lead_stats.conversion_rate || 0) + '%';
-            }
-            
-            if (data.email_stats) {
-                document.getElementById('emailsSent').textContent = data.email_stats.sent_today || 0;
-                document.getElementById('emailsOpened').textContent = data.email_stats.opened_today || 0;
-                document.getElementById('emailsClicked').textContent = data.email_stats.clicked_today || 0;
-                document.getElementById('emailsReplied').textContent = data.email_stats.replied_today || 0;
-            }
-        }
-        
-        // Fallback demo data
+        // Load demo data
         function loadDemoData(clientId) {
+            console.log('📈 Loading demo data for:', clientId);
+            
             const demoData = {
                 'VIKING001': { workflows: 8, executions: 1247, newLeads: 23, emailsSent: 156 },
                 'CLIENT001': { workflows: 5, executions: 892, newLeads: 15, emailsSent: 98 },
@@ -654,7 +630,13 @@
             document.getElementById('totalExecutions').textContent = data.executions.toLocaleString();
             document.getElementById('successRate').textContent = '98.2%';
             document.getElementById('newLeads').textContent = data.newLeads;
+            document.getElementById('qualifiedLeads').textContent = Math.floor(data.newLeads * 0.8);
+            document.getElementById('totalLeads').textContent = '1,456';
+            document.getElementById('conversionRate').textContent = '12.8%';
             document.getElementById('emailsSent').textContent = data.emailsSent;
+            document.getElementById('emailsOpened').textContent = Math.floor(data.emailsSent * 0.57);
+            document.getElementById('emailsClicked').textContent = Math.floor(data.emailsSent * 0.15);
+            document.getElementById('emailsReplied').textContent = Math.floor(data.emailsSent * 0.04);
             document.getElementById('lastRun').textContent = '2 min';
         }
         
@@ -666,10 +648,12 @@
         
         // Logout function
         function logout() {
+            console.log('🚪 Logging out');
             currentSession = null;
             document.getElementById('loginSection').style.display = 'block';
             document.getElementById('dashboard').classList.remove('active');
             document.getElementById('logoutBtn').classList.remove('active');
+            document.getElementById('adminPanel').style.display = 'none';
             document.getElementById('clientId').value = '';
             document.getElementById('clientPassword').value = '';
             document.getElementById('errorMessage').innerHTML = '';
@@ -818,8 +802,7 @@
             const clientsDiv = document.getElementById('clientsList');
             
             try {
-                // In a real implementation, this would call an API to get all clients
-                // For now, we'll show a demo list
+                // Demo clients list
                 const demoClients = [
                     { id: 'CLIENT001', name: 'ABC Company B.V.', package: 'Pro Lead Generation', status: 'Active' },
                     { id: 'CLIENT002', name: 'XYZ Startup', package: 'Basic Email Marketing', status: 'Active' }
