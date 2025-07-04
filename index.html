@@ -506,48 +506,65 @@
         async function loadVikingWorkflows() {
             try {
                 const response = await fetch('https://n8n.thevikingwebdesign.com/webhook/get-my-workflows');
-                let workflows = await response.json();
+                let rawData = await response.json();
                 
-                console.log('🔍 Raw API response:', workflows);
+                console.log('🔍 Raw API response type:', typeof rawData);
+                console.log('🔍 Is array:', Array.isArray(rawData));
                 
-                // Handle N8N wrapped response format
-                if (Array.isArray(workflows) && workflows[0] && workflows[0].json) {
-                    workflows = workflows.map(item => item.json);
-                    console.log('🧹 Cleaned workflows:', workflows);
+                // Extract workflows from complex N8N API response
+                let workflows = [];
+                
+                if (Array.isArray(rawData)) {
+                    // If it's an array, it might be the workflows directly
+                    workflows = rawData;
+                } else if (rawData.data && Array.isArray(rawData.data)) {
+                    // Standard N8N API format: { data: [...] }
+                    workflows = rawData.data;
+                } else if (rawData.workflows) {
+                    // Alternative format
+                    workflows = rawData.workflows;
+                } else {
+                    // Single workflow object
+                    workflows = [rawData];
                 }
+
+                console.log('📊 Extracted workflows count:', workflows.length);
                 
-                // Handle both single object and array responses
-                if (!Array.isArray(workflows)) {
-                    workflows = [workflows];
-                }
+                // Transform complex N8N data to simple format
+                const simplifiedWorkflows = workflows.map((wf, index) => {
+                    // Handle different possible field names
+                    const name = wf.name || wf.workflow_name || wf.title || `Workflow ${index + 1}`;
+                    const active = wf.active !== undefined ? wf.active : (wf.is_active !== undefined ? wf.is_active : true);
+                    const id = wf.id || index + 1;
+                    
+                    return {
+                        id: id,
+                        workflow_name: name,
+                        folder_name: mapWorkflowToFolder(name),
+                        is_active: active,
+                        description: generateDescription(name, active),
+                        created_at: wf.createdAt || wf.created_at || new Date().toISOString()
+                    };
+                });
 
-                console.log('📊 Final workflows data:', workflows);
+                console.log('✨ Simplified workflows:', simplifiedWorkflows);
 
-                // Filter workflows by Viking folders (flexible folder matching)
-                const automationWorkflows = workflows.filter(wf => 
-                    wf.folder_name && (
-                        wf.folder_name.includes('Viking Automation') || 
-                        wf.folder_name.includes('Automation')
-                    )
+                // Filter workflows by Viking folders
+                const automationWorkflows = simplifiedWorkflows.filter(wf => 
+                    wf.folder_name && wf.folder_name.includes('Automation')
                 );
                 
-                const webdesignWorkflows = workflows.filter(wf => 
-                    wf.folder_name && (
-                        wf.folder_name.includes('Viking Webdesign') || 
-                        wf.folder_name.includes('Webdesign')
-                    )
+                const webdesignWorkflows = simplifiedWorkflows.filter(wf => 
+                    wf.folder_name && wf.folder_name.includes('Webdesign')
                 );
                 
-                const coachingWorkflows = workflows.filter(wf => 
-                    wf.folder_name && (
-                        wf.folder_name.includes('Viking Coaching') || 
-                        wf.folder_name.includes('Coaching')
-                    )
+                const coachingWorkflows = simplifiedWorkflows.filter(wf => 
+                    wf.folder_name && wf.folder_name.includes('Coaching')
                 );
 
-                console.log('📁 Automation workflows:', automationWorkflows);
-                console.log('📁 Webdesign workflows:', webdesignWorkflows);
-                console.log('📁 Coaching workflows:', coachingWorkflows);
+                console.log('📁 Automation workflows:', automationWorkflows.length);
+                console.log('📁 Webdesign workflows:', webdesignWorkflows.length);
+                console.log('📁 Coaching workflows:', coachingWorkflows.length);
 
                 // Update each folder
                 updateWorkflowFolder('automation-workflows', automationWorkflows);
@@ -565,6 +582,77 @@
                 showErrorInFolder('webdesign-workflows');
                 showErrorInFolder('coaching-workflows');
             }
+        }
+
+        // Map workflow names to folders based on your N8N structure
+        function mapWorkflowToFolder(workflowName) {
+            if (!workflowName || typeof workflowName !== 'string') {
+                return 'Other';
+            }
+            
+            const name = workflowName.toLowerCase();
+            
+            // The Viking Automation folder
+            if (name.includes('see my workflows') || 
+                name.includes('dashboard') && name.includes('automation')) {
+                return 'The Viking Automation';
+            }
+            
+            // The Viking Webdesign folder  
+            if (name.includes('database controls') ||
+                name.includes('lead gen') ||
+                name.includes('email buffer') ||
+                name.includes('social media') ||
+                name.includes('cold outreach') ||
+                name.includes('viking-dashboard') ||
+                name.includes('webdesign')) {
+                return 'The Viking Webdesign';
+            }
+            
+            // The Viking Coaching folder
+            if (name.includes('coaching') ||
+                name.includes('my workflow')) {
+                return 'The Viking Coaching';
+            }
+            
+            // Default to Webdesign for unknown workflows
+            return 'The Viking Webdesign';
+        }
+
+        // Generate descriptions based on workflow names
+        function generateDescription(name, isActive) {
+            if (!name) return 'Workflow description';
+            
+            const descriptions = {
+                'See My workflows': 'Dashboard workflow for monitoring',
+                'Dashboard database controls': 'Database management and controls',
+                'Lead gen 2.0': isActive ? '🔥 ACTIVE - Lead generation workflow running' : 'Lead generation workflow',
+                'N8N E-mail buffer status': 'Email buffer status monitoring',
+                'The Viking webdesign, social media': 'Social media automation',
+                'NEXT LEVEL Cold Outreach': 'Advanced cold outreach campaigns',
+                'Viking-dashboard': 'Main dashboard management',
+                'My workflow 8': 'Coaching workflow automation'
+            };
+            
+            // Check for partial matches
+            for (const [key, desc] of Object.entries(descriptions)) {
+                if (name.toLowerCase().includes(key.toLowerCase())) {
+                    return desc;
+                }
+            }
+            
+            // Generate dynamic description
+            if (name.toLowerCase().includes('lead')) {
+                return isActive ? '🔥 ACTIVE - Lead generation system' : 'Lead generation system';
+            }
+            if (name.toLowerCase().includes('email')) {
+                return 'Email automation workflow';
+            }
+            if (name.toLowerCase().includes('dashboard')) {
+                return 'Dashboard management system';
+            }
+            
+            return `${name} - Automation workflow`;
         }
 
         // Load all client workflows (All Workflows tab)
