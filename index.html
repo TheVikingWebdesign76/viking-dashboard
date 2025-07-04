@@ -365,413 +365,64 @@
                 Logged in as: <strong>VIKING001</strong> (Owner)
             </div>
         </div>
+        <div id="workflowStatus"></div>
+    </div>
 
-        <!-- Workflow Tabs -->
-        <div class="workflow-tabs">
-            <button class="tab-button active" onclick="switchTab('your-workflows')">
-                ⚔️ Your Workflows
-            </button>
-            <button class="tab-button" onclick="switchTab('all-workflows')">
-                🌐 All Workflows
-            </button>
-        </div>
+    <script>
+    async function laadWorkflows() {
+        try {
+            const response = await fetch('https://n8n.thevikingwebdesign.com/webhook/get-my-workflows');
+            const workflows = await response.json();
 
-        <!-- Your Workflows Tab -->
-        <div id="your-workflows" class="workflow-content active">
-            <div class="search-bar">
-                <input type="text" class="search-input" placeholder="🔍 Search your workflows..." onkeyup="searchWorkflows('your')">
-                <select class="filter-select" onchange="filterWorkflows('your', this.value)">
-                    <option value="all">All Status</option>
-                    <option value="active">Active Only</option>
-                    <option value="inactive">Inactive Only</option>
-                    <option value="pending">Pending Only</option>
-                </select>
-            </div>
+            let container = document.getElementById('workflowStatus');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'workflowStatus';
+                document.body.prepend(container);
+            }
+            container.innerHTML = '';
 
-            <div class="folder-grid">
-                <!-- Viking Automation Folder -->
-                <div class="folder-card automation-folder">
-                    <div class="folder-header">
-                        <div style="display: flex; align-items: center;">
-                            <span class="folder-icon">🤖</span>
-                            <span class="folder-title">The Viking Automation</span>
-                        </div>
-                        <div class="folder-stats">7 workflows</div>
-                    </div>
-                    <div class="workflow-list">
-                        <div class="workflow-item active" onclick="showWorkflowDetails('Lead Generation 2.0', 'automation')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                Lead Generation 2.0
-                                <span style="margin-left: auto; font-size: 0.8rem;">🔥</span>
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 2 min ago</span>
-                                <span>✅ 127 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('Email Marketing Automation', 'automation')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                Email Marketing Automation
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 5 min ago</span>
-                                <span>✅ 89 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('Cold Outreach Pipeline', 'automation')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                Cold Outreach Pipeline
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 12 min ago</span>
-                                <span>✅ 45 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('Social Media Automation', 'automation')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                Social Media Automation
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 30 min ago</span>
-                                <span>✅ 23 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item inactive" onclick="showWorkflowDetails('Database Cleanup', 'automation')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-inactive"></span>
-                                Database Cleanup
-                            </div>
-                            <div class="workflow-status">
-                                <span>Scheduled: Daily 3:00 AM</span>
-                                <span>⏸️ Paused</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item pending" onclick="showWorkflowDetails('AI Content Generator', 'automation')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-pending"></span>
-                                AI Content Generator
-                            </div>
-                            <div class="workflow-status">
-                                <span>Status: Testing</span>
-                                <span>🧪 Beta</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('Telegram Bot Handler', 'automation')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                Telegram Bot Handler
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 1 min ago</span>
-                                <span>✅ 234 executions today</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="add-workflow-btn" onclick="addNewWorkflow('automation')">
-                        ➕ Add New Automation Workflow
-                    </div>
-                </div>
+            const folders = {};
+            workflows.forEach(wf => {
+                if (!folders[wf.folder_name]) folders[wf.folder_name] = [];
+                folders[wf.folder_name].push(wf);
+            });
 
-                <!-- Viking Webdesign Folder -->
-                <div class="folder-card webdesign-folder">
-                    <div class="folder-header">
-                        <div style="display: flex; align-items: center;">
-                            <span class="folder-icon">🎨</span>
-                            <span class="folder-title">The Viking Webdesign</span>
-                        </div>
-                        <div class="folder-stats">5 workflows</div>
-                    </div>
-                    <div class="workflow-list">
-                        <div class="workflow-item active" onclick="showWorkflowDetails('Client Onboarding', 'webdesign')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                Client Onboarding
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 15 min ago</span>
-                                <span>✅ 12 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('Website Deployment', 'webdesign')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                Website Deployment
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 1 hour ago</span>
-                                <span>✅ 8 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('Project Management Sync', 'webdesign')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                Project Management Sync
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 20 min ago</span>
-                                <span>✅ 34 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('Invoice Generator', 'webdesign')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                Invoice Generator
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 2 hours ago</span>
-                                <span>✅ 6 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item pending" onclick="showWorkflowDetails('SEO Monitoring', 'webdesign')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-pending"></span>
-                                SEO Monitoring
-                            </div>
-                            <div class="workflow-status">
-                                <span>Status: Under Development</span>
-                                <span>🚧 Coming Soon</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="add-workflow-btn" onclick="addNewWorkflow('webdesign')">
-                        ➕ Add New Webdesign Workflow
-                    </div>
-                </div>
+            Object.keys(folders).forEach(folder => {
+                const folderDiv = document.createElement('div');
+                folderDiv.className = 'folder-card';
+                folderDiv.style.marginBottom = '30px';
+                folderDiv.innerHTML = `<h3 style="margin-bottom:10px;">${folder}</h3>`;
 
-                <!-- Viking Coaching Folder -->
-                <div class="folder-card coaching-folder">
-                    <div class="folder-header">
-                        <div style="display: flex; align-items: center;">
-                            <span class="folder-icon">🎯</span>
-                            <span class="folder-title">The Viking Coaching</span>
-                        </div>
-                        <div class="folder-stats">4 workflows</div>
-                    </div>
-                    <div class="workflow-list">
-                        <div class="workflow-item active" onclick="showWorkflowDetails('Student Progress Tracking', 'coaching')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                Student Progress Tracking
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 10 min ago</span>
-                                <span>✅ 56 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('Course Content Delivery', 'coaching')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                Course Content Delivery
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 25 min ago</span>
-                                <span>✅ 78 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('Community Management', 'coaching')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                Community Management
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 5 min ago</span>
-                                <span>✅ 145 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item pending" onclick="showWorkflowDetails('Certification System', 'coaching')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-pending"></span>
-                                Certification System
-                            </div>
-                            <div class="workflow-status">
-                                <span>Status: Testing Phase</span>
-                                <span>🧪 Beta Testing</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="add-workflow-btn" onclick="addNewWorkflow('coaching')">
-                        ➕ Add New Coaching Workflow
-                    </div>
-                </div>
-            </div>
-        </div>
+                folders[folder].forEach(wf => {
+                    const wfDiv = document.createElement('div');
+                    wfDiv.className = 'workflow-item';
+                    wfDiv.style.marginBottom = '10px';
+                    wfDiv.innerHTML = `
+                        <strong>${wf.workflow_name}</strong>
+                        <div style="font-size:0.9em;opacity:0.7;">${wf.description || ''}</div>
+                        <div>Status: ${wf.is_active ? '✅ Actief' : '⏸️ Inactief'}</div>
+                    `;
+                    folderDiv.appendChild(wfDiv);
+                });
 
-        <!-- All Workflows Tab -->
-        <div id="all-workflows" class="workflow-content">
-            <div class="search-bar">
-                <input type="text" class="search-input" placeholder="🔍 Search all client workflows..." onkeyup="searchWorkflows('all')">
-                <select class="filter-select" onchange="filterWorkflows('all', this.value)">
-                    <option value="all">All Clients</option>
-                    <option value="premium">Premium Clients</option>
-                    <option value="basic">Basic Clients</option>
-                    <option value="active">Active Only</option>
-                </select>
-            </div>
-
-            <div class="folder-grid">
-                <!-- CLIENT001 Folder -->
-                <div class="folder-card client-folders">
-                    <div class="folder-header">
-                        <div style="display: flex; align-items: center;">
-                            <span class="folder-icon">🏢</span>
-                            <span class="folder-title">CLIENT001 - ABC Company</span>
-                        </div>
-                        <div class="folder-stats">6 workflows</div>
-                    </div>
-                    <div class="workflow-list">
-                        <div class="workflow-item active" onclick="showWorkflowDetails('ABC Lead Generation', 'client001')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                ABC Lead Generation
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 8 min ago</span>
-                                <span>✅ 67 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('ABC Email Campaigns', 'client001')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                ABC Email Campaigns
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 15 min ago</span>
-                                <span>✅ 45 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('ABC CRM Sync', 'client001')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                ABC CRM Sync
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 30 min ago</span>
-                                <span>✅ 23 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('ABC Reporting', 'client001')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                ABC Reporting
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 1 hour ago</span>
-                                <span>✅ 12 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('ABC Social Media', 'client001')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                ABC Social Media
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 45 min ago</span>
-                                <span>✅ 34 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item pending" onclick="showWorkflowDetails('ABC Analytics Dashboard', 'client001')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-pending"></span>
-                                ABC Analytics Dashboard
-                            </div>
-                            <div class="workflow-status">
-                                <span>Status: Setup Required</span>
-                                <span>⚙️ Configuration</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CLIENT002 Folder -->
-                <div class="folder-card client-folders">
-                    <div class="folder-header">
-                        <div style="display: flex; align-items: center;">
-                            <span class="folder-icon">🚀</span>
-                            <span class="folder-title">CLIENT002 - XYZ Startup</span>
-                        </div>
-                        <div class="folder-stats">4 workflows</div>
-                    </div>
-                    <div class="workflow-list">
-                        <div class="workflow-item active" onclick="showWorkflowDetails('XYZ Lead Capture', 'client002')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                XYZ Lead Capture
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 12 min ago</span>
-                                <span>✅ 34 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('XYZ Email Sequences', 'client002')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                XYZ Email Sequences
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 25 min ago</span>
-                                <span>✅ 28 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item inactive" onclick="showWorkflowDetails('XYZ Webinar Automation', 'client002')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-inactive"></span>
-                                XYZ Webinar Automation
-                            </div>
-                            <div class="workflow-status">
-                                <span>Status: Paused by client</span>
-                                <span>⏸️ Paused</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('XYZ Basic Reporting', 'client002')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                XYZ Basic Reporting
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 2 hours ago</span>
-                                <span>✅ 8 executions today</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CLIENT003 Folder -->
-                <div class="folder-card client-folders">
-                    <div class="folder-header">
-                        <div style="display: flex; align-items: center;">
-                            <span class="folder-icon">🏪</span>
-                            <span class="folder-title">CLIENT003 - E-commerce Pro</span>
-                        </div>
-                        <div class="folder-stats">8 workflows</div>
-                    </div>
-                    <div class="workflow-list">
-                        <div class="workflow-item active" onclick="showWorkflowDetails('E-com Order Processing', 'client003')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                E-com Order Processing
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 3 min ago</span>
-                                <span>✅ 156 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('E-com Inventory Sync', 'client003')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                E-com Inventory Sync
-                            </div>
-                            <div class="workflow-status">
-                                <span>Last run: 7 min ago</span>
-                                <span>✅ 89 executions today</span>
-                            </div>
-                        </div>
-                        <div class="workflow-item active" onclick="showWorkflowDetails('E-com Customer Service', 'client003')">
-                            <div class="workflow-name">
-                                <span class="status-indicator status-active"></span>
-                                E-com Customer Service
-                            </div>
-                            <div class="workflow-status">
+                container.appendChild(folderDiv);
+            });
+        } catch (err) {
+            console.error('Kan workflows niet laden:', err);
+            let container = document.getElementById('workflowStatus');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'workflowStatus';
+                document.body.prepend(container);
+            }
+            container.innerHTML = '<div style="color:red;">Fout bij laden van workflows.</div>';
+        }
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+        laadWorkflows();
+        setInterval(laadWorkflows, 60000); // elke 60 seconden
+    });
+    </script>
+</body>
+</html>
