@@ -764,14 +764,20 @@
             }
         }
 
-        // Process raw workflow data from various N8N response formats
+        // Process raw workflow data from your exact N8N structure
         function processRawWorkflowData(rawData) {
             debugLog(`Processing raw data type: ${typeof rawData}, isArray: ${Array.isArray(rawData)}`);
             
             let workflows = [];
             
+            // Handle your exact data structure from the analysis
             if (Array.isArray(rawData)) {
-                workflows = rawData;
+                // Extract data from each item's json.data property
+                workflows = rawData
+                    .filter(item => item.json && item.json.data)
+                    .map(item => item.json.data);
+                
+                debugLog(`✅ Extracted ${workflows.length} workflows from json.data structure`);
             } else if (rawData.data && Array.isArray(rawData.data)) {
                 workflows = rawData.data;
             } else if (rawData.workflows) {
@@ -780,16 +786,32 @@
                 workflows = [rawData];
             }
 
-            // Transform to standard format
-            return workflows.map((wf, index) => ({
-                id: wf.id || index + 1,
-                workflow_name: wf.workflow_name || wf.name || `Workflow ${index + 1}`,
-                folder_name: wf.folder_name || mapWorkflowToFolder(wf.workflow_name || wf.name),
-                is_active: wf.is_active !== undefined ? wf.is_active : (wf.active !== undefined ? wf.active : true),
-                description: wf.description || generateDescription(wf.workflow_name || wf.name, wf.is_active),
-                created_at: wf.created_at || wf.createdAt || new Date().toISOString(),
-                node_count: wf.node_count || 0
-            }));
+            debugLog(`📊 Found ${workflows.length} workflows to process`);
+
+            // Transform to standard format with your actual field names
+            return workflows.map((wf, index) => {
+                const workflowName = wf.name || `Workflow ${index + 1}`;
+                const isActive = wf.active !== undefined ? wf.active : true;
+                const nodeCount = wf.nodes ? wf.nodes.length : 0;
+                const tags = wf.tags || [];
+                
+                debugLog(`Processing: ${workflowName} (${nodeCount} nodes, ${isActive ? 'active' : 'inactive'})`);
+                
+                return {
+                    id: wf.id || `workflow_${index + 1}`,
+                    workflow_name: workflowName,
+                    folder_name: mapWorkflowToFolder(workflowName, tags),
+                    is_active: isActive,
+                    description: generateDescription(workflowName, isActive, nodeCount, tags),
+                    created_at: wf.createdAt || new Date().toISOString(),
+                    updated_at: wf.updatedAt || wf.createdAt || new Date().toISOString(),
+                    node_count: nodeCount,
+                    tags: tags,
+                    is_archived: wf.isArchived || false,
+                    version_id: wf.versionId || null,
+                    trigger_count: wf.triggerCount || 0
+                };
+            });
         }
 
         // Generate mock data for demonstration when API returns minimal data
