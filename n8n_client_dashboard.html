@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viking N8N - Client Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .login-section {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .client-input {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 200px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #ff6b35;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #e55a2b;
+            transform: translateY(-2px);
+        }
+
+        .dashboard {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .dashboard.active {
+            display: grid;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card h3 {
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online { background: #4ade80; }
+        .status-warning { background: #fbbf24; }
+        .status-offline { background: #ef4444; }
+
+        .chart-container {
+            height: 200px;
+            margin-top: 20px;
+        }
+
+        .client-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 20px;
+            display: none;
+        }
+
+        .refresh-btn.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .client-input {
+                flex-direction: column;
+            }
+            
+            input {
+                min-width: 250px;
+            }
+            
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">⚔️ The Viking Webdesign</div>
+            <div>N8N Lead Generation & Email Marketing Dashboard</div>
+        </div>
+
+        <div class="login-section">
+            <h2>Client Dashboard Access</h2>
+            <p style="margin-bottom: 20px;">Enter your unique client ID to view your statistics</p>
+            <div class="client-input">
+                <input type="text" id="clientId" placeholder="Client ID (e.g: VIKING001)" />
+                <button onclick="loadClientData()">📊 Load Dashboard</button>
+            </div>
+        </div>
+
+        <div class="dashboard" id="dashboard">
+            <!-- Client Info -->
+            <div class="card">
+                <h3>👤 Client Information</h3>
+                <div class="client-info">
+                    <div><strong>Client:</strong> <span id="clientName">-</span></div>
+                    <div><strong>Package:</strong> <span id="clientPackage">-</span></div>
+                    <div><strong>Active since:</strong> <span id="clientSince">-</span></div>
+                    <div><strong>Status:</strong> 
+                        <span class="status-indicator status-online"></span>
+                        <span id="clientStatus">Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Statistics -->
+            <div class="card">
+                <h3>⚙️ N8N Workflow Status</h3>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="activeWorkflows">8</div>
+                        <div class="stat-label">Active Workflows</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalExecutions">1,247</div>
+                        <div class="stat-label">Total Executions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="successRate">98.2%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="lastRun">2 min</div>
+                        <div class="stat-label">Last Run</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lead Generation -->
+            <div class="card">
+                <h3>🎯 Lead Generation (Today)</h3>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="newLeads">23</div>
+                        <div class="stat-label">New Leads</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="qualifiedLeads">18</div>
+                        <div class="stat-label">Qualified</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalLeads">1,456</div>
+                        <div class="stat-label">Total Database</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="conversionRate">12.8%</div>
+                        <div class="stat-label">Conversion Rate</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="leadsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Email Campaigns -->
+            <div class="card">
+                <h3>📧 Email Campaign Results</h3>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="emailsSent">156</div>
+                        <div class="stat-label">Emails Sent</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="emailsOpened">89</div>
+                        <div class="stat-label">Opened</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="emailsClicked">23</div>
+                        <div class="stat-label">Clicked</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="emailsReplied">7</div>
+                        <div class="stat-label">Replied</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="emailChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Uptime Monitoring -->
+            <div class="card">
+                <h3>📊 System Uptime & Performance</h3>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="uptime">99.8%</div>
+                        <div class="stat-label">Uptime (30d)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="avgResponse">1.2s</div>
+                        <div class="stat-label">Avg Response</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="errors">3</div>
+                        <div class="stat-label">Errors (24h)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="apiCalls">2,847</div>
+                        <div class="stat-label">API Calls</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Details -->
+            <div class="card">
+                <h3>🔧 Workflow Details</h3>
+                <div style="space-y: 10px;">
+                    <div class="stat-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Lead Generation Pipeline</span>
+                            <span class="status-indicator status-online"></span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Email Marketing Automation</span>
+                            <span class="status-indicator status-online"></span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Follow-up Sequences</span>
+                            <span class="status-indicator status-warning"></span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Database Cleanup</span>
+                            <span class="status-indicator status-online"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="refresh-btn" id="refreshBtn" onclick="refreshData()">🔄</button>
+    </div>
+
+    <script>
+        // Simulated client data - in real implementation, this would come from your N8N/database
+        const clientData = {
+            'VIKING001': {
+                name: 'ABC Company B.V.',
+                package: 'Pro Lead Generation',
+                since: 'Jan 15, 2024',
+                workflows: 8,
+                executions: 1247,
+                successRate: 98.2,
+                newLeads: 23,
+                qualifiedLeads: 18,
+                totalLeads: 1456,
+                emailsSent: 156,
+                emailsOpened: 89,
+                emailsClicked: 23,
+                emailsReplied: 7
+            },
+            'VIKING002': {
+                name: 'XYZ Startup',
+                package: 'Basic Email Marketing',
+                since: 'Feb 03, 2024',
+                workflows: 5,
+                executions: 892,
+                successRate: 95.8,
+                newLeads: 15,
+                qualifiedLeads: 12,
+                totalLeads: 743,
+                emailsSent: 98,
+                emailsOpened: 54,
+                emailsClicked: 12,
+                emailsReplied: 4
+            }
+        };
+
+        let leadsChart, emailChart;
+
+        function loadClientData() {
+            const clientId = document.getElementById('clientId').value.toUpperCase();
+            
+            if (!clientData[clientId]) {
+                alert('Client ID not found. Try: VIKING001 or VIKING002');
+                return;
+            }
+
+            const data = clientData[clientId];
+            
+            // Update client info
+            document.getElementById('clientName').textContent = data.name;
+            document.getElementById('clientPackage').textContent = data.package;
+            document.getElementById('clientSince').textContent = data.since;
+            
+            // Update statistics
+            document.getElementById('activeWorkflows').textContent = data.workflows;
+            document.getElementById('totalExecutions').textContent = data.executions.toLocaleString();
+            document.getElementById('successRate').textContent = data.successRate + '%';
+            document.getElementById('newLeads').textContent = data.newLeads;
+            document.getElementById('qualifiedLeads').textContent = data.qualifiedLeads;
+            document.getElementById('totalLeads').textContent = data.totalLeads.toLocaleString();
+            document.getElementById('emailsSent').textContent = data.emailsSent;
+            document.getElementById('emailsOpened').textContent = data.emailsOpened;
+            document.getElementById('emailsClicked').textContent = data.emailsClicked;
+            document.getElementById('emailsReplied').textContent = data.emailsReplied;
+            
+            // Show dashboard
+            document.getElementById('dashboard').classList.add('active');
+            document.getElementById('refreshBtn').classList.add('active');
+            
+            // Create charts
+            createCharts(data);
+            
+            // Simulate real-time updates
+            startRealTimeUpdates();
+        }
+
+        function createCharts(data) {
+            // Leads Chart
+            const leadsCtx = document.getElementById('leadsChart').getContext('2d');
+            if (leadsChart) leadsChart.destroy();
+            
+            leadsChart = new Chart(leadsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'New Leads',
+                        data: [18, 25, 15, 32, data.newLeads, 28, 12],
+                        borderColor: '#4ade80',
+                        backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#fff' }
+                        },
+                        x: { 
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#fff' }
+                        }
+                    }
+                }
+            });
+
+            // Email Chart
+            const emailCtx = document.getElementById('emailChart').getContext('2d');
+            if (emailChart) emailChart.destroy();
+            
+            emailChart = new Chart(emailCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Opened', 'Clicked', 'Replied', 'Not opened'],
+                    datasets: [{
+                        data: [
+                            data.emailsOpened, 
+                            data.emailsClicked, 
+                            data.emailsReplied, 
+                            data.emailsSent - data.emailsOpened
+                        ],
+                        backgroundColor: ['#4ade80', '#fbbf24', '#f87171', '#6b7280']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: { color: '#fff', padding: 10 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function refreshData() {
+            // Simulate real-time data refresh
+            loadClientData();
+            
+            // Show refresh feedback
+            const btn = document.getElementById('refreshBtn');
+            btn.textContent = '✅';
+            setTimeout(() => {
+                btn.textContent = '🔄';
+            }, 1000);
+        }
+
+        function startRealTimeUpdates() {
+            setInterval(() => {
+                // Simulate small data changes
+                const elements = ['lastRun', 'avgResponse', 'apiCalls'];
+                const values = ['1 min', '1.1s', '2,851'];
+                elements.forEach((id, index) => {
+                    if (document.getElementById(id)) {
+                        document.getElementById(id).textContent = values[index];
+                    }
+                });
+            }, 30000); // Update every 30 seconds
+        }
+
+        // Initialize with demo data if Telegram Web App
+        if (window.Telegram && window.Telegram.WebApp) {
+            // This would integrate with Telegram Web App API
+            window.Telegram.WebApp.ready();
+            
+            // Auto-load demo data
+            setTimeout(() => {
+                document.getElementById('clientId').value = 'VIKING001';
+                loadClientData();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
