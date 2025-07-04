@@ -183,7 +183,131 @@
             display: block;
         }
 
-        @media (max-width: 768px) {
+        .admin-panel {
+            border: 2px solid #ff6b35;
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        .admin-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid #ff6b35;
+        }
+
+        .admin-section h4 {
+            margin-bottom: 15px;
+            color: #ff6b35;
+            font-size: 1.1rem;
+        }
+
+        .create-client-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-row input, .form-row select {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 5px;
+        }
+
+        .form-row input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .admin-btn {
+            background: #ff6b35;
+            padding: 12px 20px;
+            font-size: 14px;
+        }
+
+        .admin-btn:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .setup-link-container {
+            background: rgba(74, 222, 128, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #4ade80;
+        }
+
+        .link-display {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .link-display input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .copy-btn {
+            padding: 10px 15px;
+            background: #4ade80;
+            font-size: 12px;
+        }
+
+        .setup-instructions {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #4ade80;
+        }
+
+        .clients-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .client-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .client-info span {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .client-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .client-actions button {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
             .client-input {
                 flex-direction: column;
             }
@@ -203,7 +327,56 @@
         <div class="header">
             <div class="logo">⚔️ The Viking Webdesign</div>
             <div>N8N Lead Generation & Email Marketing Dashboard</div>
-        </div>
+            <!-- Admin Panel (Only for VIKING001) -->
+            <div class="card admin-panel" id="adminPanel" style="display: none;">
+                <h3>⚔️ Admin Panel</h3>
+                
+                <!-- Create Client Section -->
+                <div class="admin-section">
+                    <h4>👥 Create New Client</h4>
+                    <div class="create-client-form">
+                        <div class="form-row">
+                            <input type="text" id="newClientId" placeholder="Client ID (e.g: CLIENT004)" />
+                            <input type="text" id="newClientName" placeholder="Client Name" />
+                        </div>
+                        <div class="form-row">
+                            <select id="newClientPackage">
+                                <option value="Basic Email Marketing">Basic Email Marketing</option>
+                                <option value="Pro Lead Generation">Pro Lead Generation</option>
+                                <option value="Enterprise Solution">Enterprise Solution</option>
+                            </select>
+                            <input type="text" id="tempPassword" placeholder="Temporary Password" />
+                        </div>
+                        <button onclick="createNewClient()" id="createClientBtn" class="admin-btn">
+                            <span id="createClientText">🆕 Create Client</span>
+                        </button>
+                    </div>
+                    <div id="createClientResult"></div>
+                </div>
+
+                <!-- Generated Setup Link -->
+                <div class="admin-section" id="setupLinkSection" style="display: none;">
+                    <h4>🔗 Client Setup Link</h4>
+                    <div class="setup-link-container">
+                        <p>Send this link to your new client:</p>
+                        <div class="link-display">
+                            <input type="text" id="setupLink" readonly />
+                            <button onclick="copySetupLink()" class="copy-btn">📋 Copy</button>
+                        </div>
+                        <p class="setup-instructions">
+                            The client will use this link to set their own secure password.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Client Management -->
+                <div class="admin-section">
+                    <h4>📊 Client Overview</h4>
+                    <div id="clientsList">
+                        <div class="loading-clients">Loading clients...</div>
+                    </div>
+                </div>
+            </div>
 
         <div class="login-section" id="loginSection">
             <h2>🔐 Secure Client Login</h2>
@@ -402,6 +575,12 @@
             document.getElementById('dashboard').classList.add('active');
             document.getElementById('logoutBtn').classList.add('active');
             
+            // Show admin panel only for VIKING001
+            if (sessionData.client_id === 'VIKING001') {
+                document.getElementById('adminPanel').style.display = 'block';
+                loadClientsList();
+            }
+            
             // Update client info
             document.getElementById('clientName').textContent = sessionData.client_name;
             document.getElementById('clientPackage').textContent = sessionData.package_type;
@@ -503,12 +682,180 @@
             }
         });
         
-        // Auto-refresh dashboard data every 5 minutes
-        setInterval(() => {
-            if (currentSession) {
-                loadClientData(currentSession);
+        // Create new client via N8N API
+        async function createNewClient() {
+            const clientId = document.getElementById('newClientId').value.trim().toUpperCase();
+            const clientName = document.getElementById('newClientName').value.trim();
+            const packageType = document.getElementById('newClientPackage').value;
+            const tempPassword = document.getElementById('tempPassword').value.trim();
+            const createBtn = document.getElementById('createClientBtn');
+            const resultDiv = document.getElementById('createClientResult');
+            
+            // Clear previous results
+            resultDiv.innerHTML = '';
+            
+            // Validation
+            if (!clientId || !clientName) {
+                showCreateResult('Please fill in Client ID and Client Name', 'error');
+                return;
             }
-        }, 300000); // 5 minutes
+            
+            if (clientId.length < 3) {
+                showCreateResult('Client ID must be at least 3 characters', 'error');
+                return;
+            }
+            
+            if (!tempPassword || tempPassword.length < 6) {
+                showCreateResult('Temporary password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            // Show loading
+            createBtn.disabled = true;
+            document.getElementById('createClientText').innerHTML = '<span class="loading"></span> Creating...';
+            
+            try {
+                // Call N8N add-client API
+                const response = await fetch(`${N8N_API_BASE}/add-client`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentSession.session_token}`
+                    },
+                    body: JSON.stringify({
+                        client_id: clientId,
+                        client_name: clientName,
+                        package_type: packageType,
+                        password: tempPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Client created successfully
+                    showCreateResult(`✅ Client ${clientId} created successfully!`, 'success');
+                    
+                    // Generate setup link
+                    const setupUrl = generateSetupLink(clientId, tempPassword);
+                    showSetupLink(setupUrl);
+                    
+                    // Clear form
+                    clearCreateForm();
+                    
+                    // Reload clients list
+                    setTimeout(() => loadClientsList(), 1000);
+                    
+                } else {
+                    showCreateResult(`❌ ${data.message || 'Failed to create client'}`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Create client error:', error);
+                showCreateResult('❌ Connection error. Please try again.', 'error');
+            } finally {
+                // Reset button
+                createBtn.disabled = false;
+                document.getElementById('createClientText').innerHTML = '🆕 Create Client';
+            }
+        }
+        
+        // Generate setup link for new client
+        function generateSetupLink(clientId, tempPassword) {
+            const baseUrl = 'https://thevikingwebdesign76.github.io/viking-dashboard/';
+            const setupParams = btoa(JSON.stringify({
+                client_id: clientId,
+                temp_password: tempPassword,
+                setup_mode: true,
+                expires: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
+            }));
+            
+            return `${baseUrl}?setup=${setupParams}`;
+        }
+        
+        // Show setup link to admin
+        function showSetupLink(setupUrl) {
+            document.getElementById('setupLink').value = setupUrl;
+            document.getElementById('setupLinkSection').style.display = 'block';
+        }
+        
+        // Copy setup link to clipboard
+        function copySetupLink() {
+            const setupLink = document.getElementById('setupLink');
+            setupLink.select();
+            setupLink.setSelectionRange(0, 99999); // For mobile
+            
+            try {
+                document.execCommand('copy');
+                const copyBtn = document.querySelector('.copy-btn');
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+            }
+        }
+        
+        // Show create client result
+        function showCreateResult(message, type) {
+            const resultDiv = document.getElementById('createClientResult');
+            const className = type === 'success' ? 'success-message' : 'error-message';
+            resultDiv.innerHTML = `<div class="${className}">${message}</div>`;
+        }
+        
+        // Clear create client form
+        function clearCreateForm() {
+            document.getElementById('newClientId').value = '';
+            document.getElementById('newClientName').value = '';
+            document.getElementById('tempPassword').value = '';
+            document.getElementById('newClientPackage').selectedIndex = 0;
+        }
+        
+        // Load clients list for admin
+        async function loadClientsList() {
+            const clientsDiv = document.getElementById('clientsList');
+            
+            try {
+                // In a real implementation, this would call an API to get all clients
+                // For now, we'll show a demo list
+                const demoClients = [
+                    { id: 'CLIENT001', name: 'ABC Company B.V.', package: 'Pro Lead Generation', status: 'Active' },
+                    { id: 'CLIENT002', name: 'XYZ Startup', package: 'Basic Email Marketing', status: 'Active' }
+                ];
+                
+                let clientsHtml = '<div class="clients-list">';
+                demoClients.forEach(client => {
+                    clientsHtml += `
+                        <div class="client-item">
+                            <div class="client-info">
+                                <span><strong>${client.id}</strong> - ${client.name}</span>
+                                <span>Package: ${client.package}</span>
+                                <span>Status: ${client.status}</span>
+                            </div>
+                            <div class="client-actions">
+                                <button onclick="resetClientPassword('${client.id}')" class="admin-btn">🔑 Reset Password</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                clientsHtml += '</div>';
+                
+                clientsDiv.innerHTML = clientsHtml;
+                
+            } catch (error) {
+                clientsDiv.innerHTML = '<div class="error-message">Failed to load clients list</div>';
+            }
+        }
+        
+        // Reset client password (placeholder)
+        function resetClientPassword(clientId) {
+            if (confirm(`Reset password for ${clientId}? This will generate a new temporary password.`)) {
+                alert(`Password reset functionality would trigger N8N webhook for ${clientId}`);
+                // This would call your change-password webhook
+            }
+        }
     </script>
 </body>
 </html>
