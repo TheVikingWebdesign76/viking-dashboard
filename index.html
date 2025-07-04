@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Viking N8N - Live Data Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <title>Viking N8N - Workflow Organization</title>
     <style>
         * {
             margin: 0;
@@ -21,7 +20,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
@@ -40,260 +39,319 @@
             margin-bottom: 10px;
         }
 
-        .status-banner {
-            background: linear-gradient(45deg, #ff6b35, #f7931e);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.8; }
-            50% { opacity: 1; }
-            100% { opacity: 0.8; }
-        }
-
-        .login-section {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .client-input {
+        .workflow-tabs {
             display: flex;
             gap: 10px;
+            margin-bottom: 30px;
             justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
         }
 
-        input {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            min-width: 200px;
-        }
-
-        button {
+        .tab-button {
             padding: 12px 24px;
-            background: #ff6b35;
-            color: white;
+            background: rgba(255, 255, 255, 0.1);
             border: none;
             border-radius: 8px;
+            color: white;
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
             transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
 
-        button:hover {
-            background: #e55a2b;
+        .tab-button.active {
+            background: #ff6b35;
+            border-color: #ff6b35;
             transform: translateY(-2px);
         }
 
-        button:disabled {
-            background: #999;
-            cursor: not-allowed;
-            transform: none;
+        .tab-button:hover {
+            background: rgba(255, 107, 53, 0.3);
         }
 
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #ffffff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .error-message {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fecaca;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            border-left: 4px solid #ef4444;
-        }
-
-        .success-message {
-            background: rgba(74, 222, 128, 0.2);
-            color: #4ade80;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            border-left: 4px solid #4ade80;
-        }
-
-        .dashboard {
+        .workflow-content {
             display: none;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
         }
 
-        .dashboard.active {
+        .workflow-content.active {
+            display: block;
+        }
+
+        .folder-grid {
             display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
-        .card {
+        .folder-card {
             background: rgba(255, 255, 255, 0.15);
-            padding: 25px;
             border-radius: 15px;
+            padding: 25px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .card h3 {
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
             position: relative;
             overflow: hidden;
         }
 
-        .stat-number {
+        .folder-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .folder-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .folder-icon {
             font-size: 2rem;
+            margin-right: 15px;
+        }
+
+        .folder-title {
+            font-size: 1.3rem;
             font-weight: bold;
-            margin-bottom: 5px;
-            transition: all 0.3s ease;
+            flex: 1;
         }
 
-        .stat-label {
+        .folder-stats {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 20px;
             font-size: 0.9rem;
-            opacity: 0.8;
         }
 
-        .live-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            background: #4ade80;
-            border-radius: 50%;
-            margin-left: 10px;
-            animation: pulse 1s infinite;
+        .workflow-list {
+            display: grid;
+            gap: 12px;
         }
 
-        .data-source-card {
-            border: 2px solid #4ade80;
-            background: rgba(74, 222, 128, 0.1);
-        }
-
-        .client-info {
+        .workflow-item {
             background: rgba(255, 255, 255, 0.1);
             padding: 15px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
         }
 
-        .logout-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(239, 68, 68, 0.8);
-            font-size: 14px;
-            padding: 8px 16px;
-            display: none;
+        .workflow-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
         }
 
-        .logout-btn.active {
-            display: block;
+        .workflow-item.active {
+            border-left-color: #4ade80;
+            background: rgba(74, 222, 128, 0.1);
         }
 
-        .admin-panel {
-            border: 2px solid #ff6b35;
-            background: rgba(255, 107, 53, 0.1);
-            grid-column: 1 / -1;
+        .workflow-item.inactive {
+            border-left-color: #ef4444;
+            opacity: 0.7;
         }
 
-        .data-connection-status {
+        .workflow-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: between;
+        }
+
+        .workflow-status {
+            font-size: 0.8rem;
+            opacity: 0.8;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
         }
 
-        .connection-dot {
-            width: 12px;
-            height: 12px;
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             margin-right: 8px;
         }
 
-        .connected {
+        .status-active {
             background: #4ade80;
-            animation: pulse 1s infinite;
+            animation: pulse 2s infinite;
         }
 
-        .disconnected {
+        .status-inactive {
             background: #ef4444;
         }
 
-        .pending {
+        .status-pending {
             background: #fbbf24;
-            animation: pulse 1s infinite;
+            animation: pulse 2s infinite;
         }
 
-        .refresh-btn {
-            background: #4ade80;
-            font-size: 12px;
-            padding: 5px 10px;
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
         }
 
-        .last-updated {
-            font-size: 0.8rem;
-            opacity: 0.7;
+        .viking-folders {
+            border: 2px solid #ff6b35;
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        .client-folders {
+            border: 2px solid #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .automation-folder {
+            border: 2px solid #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .webdesign-folder {
+            border: 2px solid #8b5cf6;
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .coaching-folder {
+            border: 2px solid #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .add-workflow-btn {
+            background: rgba(74, 222, 128, 0.2);
+            border: 2px dashed #4ade80;
+            padding: 20px;
             text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .add-workflow-btn:hover {
+            background: rgba(74, 222, 128, 0.3);
+            transform: scale(1.02);
+        }
+
+        .workflow-actions {
+            display: flex;
+            gap: 10px;
             margin-top: 10px;
         }
 
-        .chart-container {
-            height: 200px;
-            margin-top: 20px;
+        .action-btn {
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .edit-btn { background: rgba(59, 130, 246, 0.3); }
+        .copy-btn { background: rgba(16, 185, 129, 0.3); }
+        .delete-btn { background: rgba(239, 68, 68, 0.3); }
+        .move-btn { background: rgba(245, 158, 11, 0.3); }
+
+        .search-bar {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+
+        .workflow-details-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
         }
 
         @media (max-width: 768px) {
-            .client-input {
-                flex-direction: column;
-            }
-            
-            input {
-                min-width: 250px;
-            }
-            
-            .stat-grid {
+            .folder-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .workflow-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .tab-button {
+                width: 200px;
             }
         }
     </style>
@@ -302,802 +360,418 @@
     <div class="container">
         <div class="header">
             <div class="logo">⚔️ The Viking Webdesign</div>
-            <div>N8N Live Data Dashboard</div>
-            <div class="status-banner">
-                🔴 LIVE DATA MODE - Real-time Business Intelligence
+            <div>N8N Workflow Organization System</div>
+            <div style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">
+                Logged in as: <strong>VIKING001</strong> (Owner)
             </div>
         </div>
 
-        <div class="login-section" id="loginSection">
-            <h2>🔐 Access Live Dashboard</h2>
-            <p style="margin-bottom: 20px;">Connect to real-time data streams</p>
-            <div class="client-input">
-                <input type="text" id="clientId" placeholder="Client ID" />
-                <input type="password" id="clientPassword" placeholder="Password" />
-                <button onclick="authenticateClient()" id="loginBtn">
-                    <span id="loginText">📊 Connect Live Data</span>
-                </button>
-            </div>
-            <div id="errorMessage"></div>
+        <!-- Workflow Tabs -->
+        <div class="workflow-tabs">
+            <button class="tab-button active" onclick="switchTab('your-workflows')">
+                ⚔️ Your Workflows
+            </button>
+            <button class="tab-button" onclick="switchTab('all-workflows')">
+                🌐 All Workflows
+            </button>
         </div>
 
-        <div class="dashboard" id="dashboard">
-            <!-- Data Source Status -->
-            <div class="card data-source-card">
-                <h3>📡 Live Data Sources <span class="live-indicator"></span></h3>
-                <div class="data-connection-status">
-                    <div>
-                        <span class="connection-dot" id="n8nStatus"></span>
-                        N8N Workflows
-                    </div>
-                    <button onclick="testN8NConnection()" class="refresh-btn">Test</button>
-                </div>
-                <div class="data-connection-status">
-                    <div>
-                        <span class="connection-dot" id="dbStatus"></span>
-                        PostgreSQL Database
-                    </div>
-                    <button onclick="testDBConnection()" class="refresh-btn">Test</button>
-                </div>
-                <div class="data-connection-status">
-                    <div>
-                        <span class="connection-dot" id="emailStatus"></span>
-                        Email Marketing API
-                    </div>
-                    <button onclick="testEmailConnection()" class="refresh-btn">Test</button>
-                </div>
-                <div class="data-connection-status">
-                    <div>
-                        <span class="connection-dot" id="leadStatus"></span>
-                        Lead Generation API
-                    </div>
-                    <button onclick="testLeadConnection()" class="refresh-btn">Test</button>
-                </div>
-                <div class="last-updated">
-                    Last sync: <span id="lastSync">Connecting...</span>
-                </div>
+        <!-- Your Workflows Tab -->
+        <div id="your-workflows" class="workflow-content active">
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="🔍 Search your workflows..." onkeyup="searchWorkflows('your')">
+                <select class="filter-select" onchange="filterWorkflows('your', this.value)">
+                    <option value="all">All Status</option>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive Only</option>
+                    <option value="pending">Pending Only</option>
+                </select>
             </div>
 
-            <!-- Admin Panel -->
-            <div class="card admin-panel" id="adminPanel" style="display: none;">
-                <h3>⚔️ Live Data Control Center</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                    <button onclick="forceDataRefresh()" class="refresh-btn">🔄 Force Refresh</button>
-                    <button onclick="exportLiveData()" class="refresh-btn">📤 Export Data</button>
-                    <button onclick="resetConnections()" class="refresh-btn">🔧 Reset APIs</button>
-                    <button onclick="viewLogs()" class="refresh-btn">📋 View Logs</button>
+            <div class="folder-grid">
+                <!-- Viking Automation Folder -->
+                <div class="folder-card automation-folder">
+                    <div class="folder-header">
+                        <div style="display: flex; align-items: center;">
+                            <span class="folder-icon">🤖</span>
+                            <span class="folder-title">The Viking Automation</span>
+                        </div>
+                        <div class="folder-stats">7 workflows</div>
+                    </div>
+                    <div class="workflow-list">
+                        <div class="workflow-item active" onclick="showWorkflowDetails('Lead Generation 2.0', 'automation')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                Lead Generation 2.0
+                                <span style="margin-left: auto; font-size: 0.8rem;">🔥</span>
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 2 min ago</span>
+                                <span>✅ 127 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('Email Marketing Automation', 'automation')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                Email Marketing Automation
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 5 min ago</span>
+                                <span>✅ 89 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('Cold Outreach Pipeline', 'automation')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                Cold Outreach Pipeline
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 12 min ago</span>
+                                <span>✅ 45 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('Social Media Automation', 'automation')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                Social Media Automation
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 30 min ago</span>
+                                <span>✅ 23 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item inactive" onclick="showWorkflowDetails('Database Cleanup', 'automation')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-inactive"></span>
+                                Database Cleanup
+                            </div>
+                            <div class="workflow-status">
+                                <span>Scheduled: Daily 3:00 AM</span>
+                                <span>⏸️ Paused</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item pending" onclick="showWorkflowDetails('AI Content Generator', 'automation')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-pending"></span>
+                                AI Content Generator
+                            </div>
+                            <div class="workflow-status">
+                                <span>Status: Testing</span>
+                                <span>🧪 Beta</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('Telegram Bot Handler', 'automation')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                Telegram Bot Handler
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 1 min ago</span>
+                                <span>✅ 234 executions today</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="add-workflow-btn" onclick="addNewWorkflow('automation')">
+                        ➕ Add New Automation Workflow
+                    </div>
                 </div>
-            </div>
 
-            <!-- Client Info -->
-            <div class="card">
-                <h3>👤 Live Session Info</h3>
-                <div class="client-info">
-                    <div><strong>Client:</strong> <span id="clientName">-</span></div>
-                    <div><strong>Package:</strong> <span id="clientPackage">-</span></div>
-                    <div><strong>Data Access:</strong> <span id="dataAccess">Real-time</span></div>
-                    <div><strong>Sync Status:</strong> <span id="syncStatus">🔴 Connecting</span></div>
-                    <div><strong>API Calls Today:</strong> <span id="apiCalls">-</span></div>
+                <!-- Viking Webdesign Folder -->
+                <div class="folder-card webdesign-folder">
+                    <div class="folder-header">
+                        <div style="display: flex; align-items: center;">
+                            <span class="folder-icon">🎨</span>
+                            <span class="folder-title">The Viking Webdesign</span>
+                        </div>
+                        <div class="folder-stats">5 workflows</div>
+                    </div>
+                    <div class="workflow-list">
+                        <div class="workflow-item active" onclick="showWorkflowDetails('Client Onboarding', 'webdesign')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                Client Onboarding
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 15 min ago</span>
+                                <span>✅ 12 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('Website Deployment', 'webdesign')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                Website Deployment
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 1 hour ago</span>
+                                <span>✅ 8 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('Project Management Sync', 'webdesign')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                Project Management Sync
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 20 min ago</span>
+                                <span>✅ 34 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('Invoice Generator', 'webdesign')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                Invoice Generator
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 2 hours ago</span>
+                                <span>✅ 6 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item pending" onclick="showWorkflowDetails('SEO Monitoring', 'webdesign')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-pending"></span>
+                                SEO Monitoring
+                            </div>
+                            <div class="workflow-status">
+                                <span>Status: Under Development</span>
+                                <span>🚧 Coming Soon</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="add-workflow-btn" onclick="addNewWorkflow('webdesign')">
+                        ➕ Add New Webdesign Workflow
+                    </div>
                 </div>
-            </div>
 
-            <!-- Real-time Lead Generation -->
-            <div class="card">
-                <h3>🎯 Live Lead Generation <span class="live-indicator"></span></h3>
-                <div class="stat-grid">
-                    <div class="stat-item">
-                        <div class="stat-number" id="newLeadsLive">-</div>
-                        <div class="stat-label">Leads Today</div>
+                <!-- Viking Coaching Folder -->
+                <div class="folder-card coaching-folder">
+                    <div class="folder-header">
+                        <div style="display: flex; align-items: center;">
+                            <span class="folder-icon">🎯</span>
+                            <span class="folder-title">The Viking Coaching</span>
+                        </div>
+                        <div class="folder-stats">4 workflows</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number" id="qualifiedLeadsLive">-</div>
-                        <div class="stat-label">Qualified</div>
+                    <div class="workflow-list">
+                        <div class="workflow-item active" onclick="showWorkflowDetails('Student Progress Tracking', 'coaching')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                Student Progress Tracking
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 10 min ago</span>
+                                <span>✅ 56 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('Course Content Delivery', 'coaching')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                Course Content Delivery
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 25 min ago</span>
+                                <span>✅ 78 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('Community Management', 'coaching')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                Community Management
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 5 min ago</span>
+                                <span>✅ 145 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item pending" onclick="showWorkflowDetails('Certification System', 'coaching')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-pending"></span>
+                                Certification System
+                            </div>
+                            <div class="workflow-status">
+                                <span>Status: Testing Phase</span>
+                                <span>🧪 Beta Testing</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number" id="totalLeadsLive">-</div>
-                        <div class="stat-label">Total Database</div>
+                    <div class="add-workflow-btn" onclick="addNewWorkflow('coaching')">
+                        ➕ Add New Coaching Workflow
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number" id="conversionRateLive">-</div>
-                        <div class="stat-label">Conversion Rate</div>
-                    </div>
-                </div>
-                <div class="last-updated">
-                    Last lead: <span id="lastLead">Fetching...</span>
-                </div>
-            </div>
-
-            <!-- Real-time Email Campaigns -->
-            <div class="card">
-                <h3>📧 Live Email Campaigns <span class="live-indicator"></span></h3>
-                <div class="stat-grid">
-                    <div class="stat-item">
-                        <div class="stat-number" id="emailsSentLive">-</div>
-                        <div class="stat-label">Sent Today</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" id="emailsOpenedLive">-</div>
-                        <div class="stat-label">Opens</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" id="emailsClickedLive">-</div>
-                        <div class="stat-label">Clicks</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" id="emailsRepliedLive">-</div>
-                        <div class="stat-label">Replies</div>
-                    </div>
-                </div>
-                <div class="last-updated">
-                    Last campaign: <span id="lastCampaign">Fetching...</span>
-                </div>
-            </div>
-
-            <!-- Live N8N Workflows -->
-            <div class="card">
-                <h3>⚙️ Live N8N Status <span class="live-indicator"></span></h3>
-                <div class="stat-grid">
-                    <div class="stat-item">
-                        <div class="stat-number" id="activeWorkflowsLive">-</div>
-                        <div class="stat-label">Active Now</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" id="executionsLive">-</div>
-                        <div class="stat-label">Executions</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" id="successRateLive">-</div>
-                        <div class="stat-label">Success Rate</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" id="lastRunLive">-</div>
-                        <div class="stat-label">Last Run</div>
-                    </div>
-                </div>
-                <div class="last-updated">
-                    Workflow sync: <span id="workflowSync">Connecting...</span>
-                </div>
-            </div>
-
-            <!-- Live Analytics Chart -->
-            <div class="card">
-                <h3>📈 Live Analytics Trends</h3>
-                <div class="chart-container">
-                    <canvas id="liveChart"></canvas>
-                </div>
-                <div class="last-updated">
-                    Chart updated: <span id="chartUpdate">Initializing...</span>
                 </div>
             </div>
         </div>
 
-        <button class="logout-btn" id="logoutBtn" onclick="logout()">🚪 Logout</button>
-    </div>
+        <!-- All Workflows Tab -->
+        <div id="all-workflows" class="workflow-content">
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="🔍 Search all client workflows..." onkeyup="searchWorkflows('all')">
+                <select class="filter-select" onchange="filterWorkflows('all', this.value)">
+                    <option value="all">All Clients</option>
+                    <option value="premium">Premium Clients</option>
+                    <option value="basic">Basic Clients</option>
+                    <option value="active">Active Only</option>
+                </select>
+            </div>
 
-    <script>
-        // N8N API Configuration for LIVE DATA
-        const N8N_API_BASE = 'https://n8n.thevikingwebdesign.com/webhook';
-        
-        let currentSession = null;
-        let liveDataInterval = null;
-        let liveChart = null;
-        let dataPoints = [];
+            <div class="folder-grid">
+                <!-- CLIENT001 Folder -->
+                <div class="folder-card client-folders">
+                    <div class="folder-header">
+                        <div style="display: flex; align-items: center;">
+                            <span class="folder-icon">🏢</span>
+                            <span class="folder-title">CLIENT001 - ABC Company</span>
+                        </div>
+                        <div class="folder-stats">6 workflows</div>
+                    </div>
+                    <div class="workflow-list">
+                        <div class="workflow-item active" onclick="showWorkflowDetails('ABC Lead Generation', 'client001')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                ABC Lead Generation
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 8 min ago</span>
+                                <span>✅ 67 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('ABC Email Campaigns', 'client001')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                ABC Email Campaigns
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 15 min ago</span>
+                                <span>✅ 45 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('ABC CRM Sync', 'client001')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                ABC CRM Sync
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 30 min ago</span>
+                                <span>✅ 23 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('ABC Reporting', 'client001')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                ABC Reporting
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 1 hour ago</span>
+                                <span>✅ 12 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('ABC Social Media', 'client001')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                ABC Social Media
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 45 min ago</span>
+                                <span>✅ 34 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item pending" onclick="showWorkflowDetails('ABC Analytics Dashboard', 'client001')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-pending"></span>
+                                ABC Analytics Dashboard
+                            </div>
+                            <div class="workflow-status">
+                                <span>Status: Setup Required</span>
+                                <span>⚙️ Configuration</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        // Real-time authentication with live data validation
-        async function authenticateClient() {
-            const clientId = document.getElementById('clientId').value.trim();
-            const password = document.getElementById('clientPassword').value.trim();
-            const loginBtn = document.getElementById('loginBtn');
-            const errorDiv = document.getElementById('errorMessage');
-            
-            errorDiv.innerHTML = '';
-            
-            if (!clientId || !password) {
-                showError('Please enter both Client ID and Password');
-                return;
-            }
-            
-            loginBtn.disabled = true;
-            document.getElementById('loginText').innerHTML = '<span class="loading"></span> Connecting to Live Data...';
-            
-            try {
-                console.log('🔐 Authenticating and connecting to live data sources...');
-                
-                // Try N8N authentication + data source validation
-                const authResponse = await fetch(`${N8N_API_BASE}/client-login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        client_id: clientId,
-                        password: password,
-                        request_live_data: true
-                    })
-                });
-                
-                let authenticated = false;
-                let sessionData = null;
-                
-                if (authResponse.ok) {
-                    const data = await authResponse.json();
-                    if (data.success) {
-                        console.log('✅ N8N Authentication successful');
-                        authenticated = true;
-                        sessionData = data;
-                    }
-                }
-                
-                // Fallback to local auth if N8N fails
-                if (!authenticated) {
-                    console.log('🔄 Using local authentication with live data simulation');
-                    const localAuth = authenticateLocally(clientId, password);
-                    if (localAuth.success) {
-                        authenticated = true;
-                        sessionData = localAuth;
-                    }
-                }
-                
-                if (authenticated) {
-                    currentSession = sessionData;
-                    showDashboard(sessionData);
-                    
-                    // Start live data connections
-                    await initializeLiveDataSources();
-                    startLiveDataUpdates();
-                    
-                    showSuccess('✅ Connected to live data sources successfully!');
-                } else {
-                    showError('Invalid credentials. Unable to connect to live data sources.');
-                }
-                
-            } catch (error) {
-                console.error('❌ Connection error:', error);
-                showError('Connection failed. Check your network and try again.');
-            } finally {
-                loginBtn.disabled = false;
-                document.getElementById('loginText').innerHTML = '📊 Connect Live Data';
-            }
-        }
+                <!-- CLIENT002 Folder -->
+                <div class="folder-card client-folders">
+                    <div class="folder-header">
+                        <div style="display: flex; align-items: center;">
+                            <span class="folder-icon">🚀</span>
+                            <span class="folder-title">CLIENT002 - XYZ Startup</span>
+                        </div>
+                        <div class="folder-stats">4 workflows</div>
+                    </div>
+                    <div class="workflow-list">
+                        <div class="workflow-item active" onclick="showWorkflowDetails('XYZ Lead Capture', 'client002')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                XYZ Lead Capture
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 12 min ago</span>
+                                <span>✅ 34 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('XYZ Email Sequences', 'client002')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                XYZ Email Sequences
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 25 min ago</span>
+                                <span>✅ 28 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item inactive" onclick="showWorkflowDetails('XYZ Webinar Automation', 'client002')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-inactive"></span>
+                                XYZ Webinar Automation
+                            </div>
+                            <div class="workflow-status">
+                                <span>Status: Paused by client</span>
+                                <span>⏸️ Paused</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('XYZ Basic Reporting', 'client002')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                XYZ Basic Reporting
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 2 hours ago</span>
+                                <span>✅ 8 executions today</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        // Initialize live data source connections
-        async function initializeLiveDataSources() {
-            console.log('🔌 Initializing live data source connections...');
-            
-            // Test all data source connections
-            await testN8NConnection();
-            await testDBConnection();
-            await testEmailConnection();
-            await testLeadConnection();
-            
-            // Initialize live chart
-            initializeLiveChart();
-            
-            console.log('✅ Live data sources initialized');
-        }
-
-        // Test N8N connection
-        async function testN8NConnection() {
-            const statusDot = document.getElementById('n8nStatus');
-            statusDot.className = 'connection-dot pending';
-            
-            try {
-                const response = await fetch(`${N8N_API_BASE}/health-check`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${currentSession?.session_token || 'demo'}`
-                    }
-                });
-                
-                if (response.ok) {
-                    statusDot.className = 'connection-dot connected';
-                    console.log('✅ N8N connection: Active');
-                    return true;
-                } else {
-                    throw new Error('N8N API unavailable');
-                }
-            } catch (error) {
-                console.log('⚠️ N8N connection: Using simulation mode');
-                statusDot.className = 'connection-dot connected'; // Still show as connected for demo
-                return false;
-            }
-        }
-
-        // Test Database connection
-        async function testDBConnection() {
-            const statusDot = document.getElementById('dbStatus');
-            statusDot.className = 'connection-dot pending';
-            
-            try {
-                const response = await fetch(`${N8N_API_BASE}/db-health`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${currentSession?.session_token || 'demo'}`
-                    }
-                });
-                
-                if (response.ok) {
-                    statusDot.className = 'connection-dot connected';
-                    console.log('✅ Database connection: Active');
-                    return true;
-                } else {
-                    throw new Error('Database unavailable');
-                }
-            } catch (error) {
-                console.log('⚠️ Database connection: Using simulation mode');
-                statusDot.className = 'connection-dot connected'; // Still show as connected for demo
-                return false;
-            }
-        }
-
-        // Test Email API connection
-        async function testEmailConnection() {
-            const statusDot = document.getElementById('emailStatus');
-            statusDot.className = 'connection-dot pending';
-            
-            // Simulate email service connection
-            setTimeout(() => {
-                statusDot.className = 'connection-dot connected';
-                console.log('✅ Email API connection: Active (simulated)');
-            }, 1000);
-        }
-
-        // Test Lead API connection
-        async function testLeadConnection() {
-            const statusDot = document.getElementById('leadStatus');
-            statusDot.className = 'connection-dot pending';
-            
-            // Simulate lead service connection
-            setTimeout(() => {
-                statusDot.className = 'connection-dot connected';
-                console.log('✅ Lead API connection: Active (simulated)');
-            }, 1500);
-        }
-
-        // Start live data updates
-        function startLiveDataUpdates() {
-            console.log('🚀 Starting live data updates...');
-            
-            // Update immediately
-            fetchLiveData();
-            
-            // Then update every 15 seconds for real-time feel
-            liveDataInterval = setInterval(fetchLiveData, 15000);
-            
-            // Update last sync time
-            updateSyncStatus();
-        }
-
-        // Fetch live data from all sources
-        async function fetchLiveData() {
-            try {
-                console.log('📊 Fetching live data...');
-                
-                // Simulate real API calls with dynamic data
-                const liveData = generateLiveData();
-                
-                // Update dashboard with live data
-                updateLiveDashboard(liveData);
-                
-                // Update chart
-                updateLiveChart(liveData);
-                
-                // Update sync status
-                updateSyncStatus();
-                
-                console.log('✅ Live data updated successfully');
-                
-            } catch (error) {
-                console.error('❌ Failed to fetch live data:', error);
-                showError('Live data sync failed. Retrying...');
-            }
-        }
-
-        // Generate realistic live data (simulating real APIs)
-        function generateLiveData() {
-            const now = new Date();
-            const timeOfDay = now.getHours();
-            
-            // Business hours multiplier (more activity during 9-17)
-            const businessHours = (timeOfDay >= 9 && timeOfDay <= 17) ? 1.5 : 0.3;
-            
-            // Base values with realistic fluctuations
-            const baseLeads = 15;
-            const baseEmails = 120;
-            const baseWorkflows = 8;
-            
-            // Add realistic randomness
-            const leadVariation = Math.floor(Math.random() * 10 * businessHours);
-            const emailVariation = Math.floor(Math.random() * 30 * businessHours);
-            
-            return {
-                leads: {
-                    new_today: baseLeads + leadVariation,
-                    qualified: Math.floor((baseLeads + leadVariation) * 0.75),
-                    total_database: 1456 + Math.floor(Math.random() * 5),
-                    conversion_rate: (12.5 + Math.random() * 2).toFixed(1) + '%'
-                },
-                emails: {
-                    sent: baseEmails + emailVariation,
-                    opened: Math.floor((baseEmails + emailVariation) * 0.58),
-                    clicked: Math.floor((baseEmails + emailVariation) * 0.16),
-                    replied: Math.floor((baseEmails + emailVariation) * 0.05)
-                },
-                workflows: {
-                    active: baseWorkflows,
-                    executions: 1247 + Math.floor(Math.random() * 20),
-                    success_rate: (97.8 + Math.random() * 1.5).toFixed(1) + '%',
-                    last_run: Math.floor(Math.random() * 10) + ' min'
-                },
-                timestamp: now
-            };
-        }
-
-        // Update dashboard with live data
-        function updateLiveDashboard(data) {
-            // Update lead generation metrics
-            animateCounter('newLeadsLive', data.leads.new_today);
-            animateCounter('qualifiedLeadsLive', data.leads.qualified);
-            document.getElementById('totalLeadsLive').textContent = data.leads.total_database.toLocaleString();
-            document.getElementById('conversionRateLive').textContent = data.leads.conversion_rate;
-            
-            // Update email campaign metrics
-            animateCounter('emailsSentLive', data.emails.sent);
-            animateCounter('emailsOpenedLive', data.emails.opened);
-            animateCounter('emailsClickedLive', data.emails.clicked);
-            animateCounter('emailsRepliedLive', data.emails.replied);
-            
-            // Update workflow metrics
-            document.getElementById('activeWorkflowsLive').textContent = data.workflows.active;
-            animateCounter('executionsLive', data.workflows.executions);
-            document.getElementById('successRateLive').textContent = data.workflows.success_rate;
-            document.getElementById('lastRunLive').textContent = data.workflows.last_run;
-            
-            // Update timestamps
-            const timeStr = data.timestamp.toLocaleTimeString();
-            document.getElementById('lastLead').textContent = timeStr;
-            document.getElementById('lastCampaign').textContent = timeStr;
-            document.getElementById('workflowSync').textContent = timeStr;
-        }
-
-        // Animate counter updates
-        function animateCounter(elementId, newValue) {
-            const element = document.getElementById(elementId);
-            const currentValue = parseInt(element.textContent) || 0;
-            
-            if (newValue !== currentValue) {
-                element.style.transform = 'scale(1.1)';
-                element.style.color = '#4ade80';
-                
-                setTimeout(() => {
-                    element.textContent = newValue.toLocaleString();
-                    element.style.transform = 'scale(1)';
-                    element.style.color = '';
-                }, 200);
-            }
-        }
-
-        // Initialize live chart
-        function initializeLiveChart() {
-            const ctx = document.getElementById('liveChart').getContext('2d');
-            
-            liveChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'New Leads',
-                            data: [],
-                            borderColor: '#4ade80',
-                            backgroundColor: 'rgba(74, 222, 128, 0.1)',
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Email Opens',
-                            data: [],
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: 'rgba(255, 255, 255, 0.8)'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: 'rgba(255, 255, 255, 0.8)'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: 'rgba(255, 255, 255, 0.8)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Update live chart
-        function updateLiveChart(data) {
-            if (!liveChart) return;
-            
-            const now = new Date();
-            const timeLabel = now.toLocaleTimeString('en-US', { 
-                hour12: false, 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-            
-            // Add new data point
-            liveChart.data.labels.push(timeLabel);
-            liveChart.data.datasets[0].data.push(data.leads.new_today);
-            liveChart.data.datasets[1].data.push(data.emails.opened);
-            
-            // Keep only last 10 data points
-            if (liveChart.data.labels.length > 10) {
-                liveChart.data.labels.shift();
-                liveChart.data.datasets[0].data.shift();
-                liveChart.data.datasets[1].data.shift();
-            }
-            
-            liveChart.update('none'); // Update without animation for smoother real-time feel
-            
-            // Update chart timestamp
-            document.getElementById('chartUpdate').textContent = now.toLocaleTimeString();
-        }
-
-        // Update sync status
-        function updateSyncStatus() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString();
-            
-            document.getElementById('lastSync').textContent = timeStr;
-            document.getElementById('syncStatus').innerHTML = '🟢 Live & Synced';
-            
-            // Update API call counter
-            const currentCalls = parseInt(document.getElementById('apiCalls').textContent) || 0;
-            document.getElementById('apiCalls').textContent = (currentCalls + 1).toLocaleString();
-        }
-
-        // Admin functions
-        function forceDataRefresh() {
-            console.log('🔄 Force refreshing all data sources...');
-            showSuccess('🔄 Forcing data refresh from all sources...');
-            
-            // Clear current data
-            clearInterval(liveDataInterval);
-            
-            // Reinitialize connections
-            initializeLiveDataSources().then(() => {
-                startLiveDataUpdates();
-                showSuccess('✅ All data sources refreshed successfully!');
-            });
-        }
-
-        function exportLiveData() {
-            console.log('📤 Exporting live data...');
-            
-            const exportData = {
-                timestamp: new Date().toISOString(),
-                client_id: currentSession?.client_id,
-                leads: {
-                    new_today: document.getElementById('newLeadsLive').textContent,
-                    qualified: document.getElementById('qualifiedLeadsLive').textContent,
-                    total: document.getElementById('totalLeadsLive').textContent,
-                    conversion_rate: document.getElementById('conversionRateLive').textContent
-                },
-                emails: {
-                    sent: document.getElementById('emailsSentLive').textContent,
-                    opened: document.getElementById('emailsOpenedLive').textContent,
-                    clicked: document.getElementById('emailsClickedLive').textContent,
-                    replied: document.getElementById('emailsRepliedLive').textContent
-                },
-                workflows: {
-                    active: document.getElementById('activeWorkflowsLive').textContent,
-                    executions: document.getElementById('executionsLive').textContent,
-                    success_rate: document.getElementById('successRateLive').textContent,
-                    last_run: document.getElementById('lastRunLive').textContent
-                }
-            };
-            
-            // Create downloadable file
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `viking-live-data-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showSuccess('📤 Live data exported successfully!');
-        }
-
-        function resetConnections() {
-            console.log('🔧 Resetting all API connections...');
-            showSuccess('🔧 Resetting all connections...');
-            
-            // Reset all connection indicators
-            document.getElementById('n8nStatus').className = 'connection-dot pending';
-            document.getElementById('dbStatus').className = 'connection-dot pending';
-            document.getElementById('emailStatus').className = 'connection-dot pending';
-            document.getElementById('leadStatus').className = 'connection-dot pending';
-            
-            // Reinitialize after delay
-            setTimeout(() => {
-                initializeLiveDataSources();
-                showSuccess('✅ All connections reset and reestablished!');
-            }, 2000);
-        }
-
-        function viewLogs() {
-            const logData = [
-                `${new Date().toLocaleTimeString()} - ✅ Live data sync completed`,
-                `${new Date(Date.now() - 15000).toLocaleTimeString()} - 📊 Dashboard updated with new metrics`,
-                `${new Date(Date.now() - 30000).toLocaleTimeString()} - 🔌 N8N workflow executed successfully`,
-                `${new Date(Date.now() - 45000).toLocaleTimeString()} - 📧 Email campaign data refreshed`,
-                `${new Date(Date.now() - 60000).toLocaleTimeString()} - 🎯 New lead captured and processed`,
-                `${new Date(Date.now() - 75000).toLocaleTimeString()} - ⚙️ Database connection verified`,
-                `${new Date(Date.now() - 90000).toLocaleTimeString()} - 🚀 Live data mode initialized`
-            ];
-            
-            alert('📋 Recent Activity Logs:\n\n' + logData.join('\n'));
-        }
-
-        // Local authentication (enhanced for live data)
-        function authenticateLocally(clientId, password) {
-            const credentials = {
-                'VIKING001': { 
-                    password: 'viking2025', 
-                    name: 'The Viking Webdesign', 
-                    package: 'Owner Full Access + Live Data',
-                    role: 'owner',
-                    data_access: 'full'
-                },
-                'CLIENT001': { 
-                    password: 'client123', 
-                    name: 'ABC Company B.V.', 
-                    package: 'Pro Lead Generation + Real-time Analytics',
-                    role: 'premium_client',
-                    data_access: 'premium'
-                },
-                'CLIENT002': { 
-                    password: 'startup456', 
-                    name: 'XYZ Startup', 
-                    package: 'Basic Package + Live Leads',
-                    role: 'basic_client',
-                    data_access: 'basic'
-                }
-            };
-            
-            const client = credentials[clientId.toUpperCase()];
-            if (client && client.password === password) {
-                return {
-                    success: true,
-                    client_id: clientId.toUpperCase(),
-                    client_name: client.name,
-                    package_type: client.package,
-                    role: client.role,
-                    data_access: client.data_access,
-                    active_since: '2025-07-04',
-                    session_token: `live_${clientId}_${Date.now()}`
-                };
-            }
-            
-            return { success: false, message: 'Invalid credentials' };
-        }
-
-        // Show dashboard with live data setup
-        function showDashboard(sessionData) {
-            console.log('📊 Initializing live dashboard for:', sessionData.client_name);
-            
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('dashboard').classList.add('active');
-            document.getElementById('logoutBtn').classList.add('active');
-            
-            // Update client info
-            document.getElementById('clientName').textContent = sessionData.client_name;
-            document.getElementById('clientPackage').textContent = sessionData.package_type;
-            document.getElementById('dataAccess').textContent = `${sessionData.data_access} real-time access`;
-            
-            // Show admin panel for owner
-            if (sessionData.role === 'owner') {
-                document.getElementById('adminPanel').style.display = 'block';
-            }
-        }
-
-        // Enhanced error/success messaging
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.innerHTML = `<div class="error-message">❌ ${message}</div>`;
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                errorDiv.innerHTML = '';
-            }, 5000);
-        }
-
-        function showSuccess(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.innerHTML = `<div class="success-message">${message}</div>`;
-            
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-                errorDiv.innerHTML = '';
-            }, 3000);
-        }
-
-        // Enhanced logout with cleanup
-        function logout() {
-            console.log('🚪 Logging out and stopping live data streams...');
-            
-            // Stop live data updates
-            if (liveDataInterval) {
-                clearInterval(liveDataInterval);
-                liveDataInterval = null;
-            }
-            
-            // Destroy chart
-            if (liveChart) {
-                liveChart.destroy();
-                liveChart = null;
-            }
-            
-            // Reset session
-            currentSession = null;
-            
-            // Reset UI
-            document.getElementById('loginSection').style.display = 'block';
-            document.getElementById('dashboard').classList.remove('active');
-            document.getElementById('logoutBtn').classList.remove('active');
-            document.getElementById('adminPanel').style.display = 'none';
-            
-            // Clear form
-            document.getElementById('clientId').value = '';
-            document.getElementById('clientPassword').value = '';
-            document.getElementById('errorMessage').innerHTML = '';
-            
-            showSuccess('👋 Logged out successfully. Live data streams stopped.');
-        }
-
-        // Auto-refresh page data every 5 minutes to prevent stale connections
-        setInterval(() => {
-            if (currentSession && liveDataInterval) {
-                console.log('🔄 Auto-refreshing page data...');
-                // Force a data refresh to keep connections alive
-                fetchLiveData();
-            }
-        }, 300000); // 5 minutes
-
-        // Enter key support
-        document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !document.getElementById('dashboard').classList.contains('active')) {
-                authenticateClient();
-            }
-        });
-
-        // Initialize page
-        console.log('🚀 Viking Live Data Dashboard initialized');
-        console.log('📊 Ready to connect to real-time data sources');
-    </script>
-</body>
-</html>
+                <!-- CLIENT003 Folder -->
+                <div class="folder-card client-folders">
+                    <div class="folder-header">
+                        <div style="display: flex; align-items: center;">
+                            <span class="folder-icon">🏪</span>
+                            <span class="folder-title">CLIENT003 - E-commerce Pro</span>
+                        </div>
+                        <div class="folder-stats">8 workflows</div>
+                    </div>
+                    <div class="workflow-list">
+                        <div class="workflow-item active" onclick="showWorkflowDetails('E-com Order Processing', 'client003')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                E-com Order Processing
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 3 min ago</span>
+                                <span>✅ 156 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('E-com Inventory Sync', 'client003')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                E-com Inventory Sync
+                            </div>
+                            <div class="workflow-status">
+                                <span>Last run: 7 min ago</span>
+                                <span>✅ 89 executions today</span>
+                            </div>
+                        </div>
+                        <div class="workflow-item active" onclick="showWorkflowDetails('E-com Customer Service', 'client003')">
+                            <div class="workflow-name">
+                                <span class="status-indicator status-active"></span>
+                                E-com Customer Service
+                            </div>
+                            <div class="workflow-status">
