@@ -885,27 +885,108 @@
             }
         }
 
-        // Action functions (placeholder implementations)
-        function editWorkflow(workflowName) {
-            alert(`Edit workflow: ${workflowName}\n\nThis would open the N8N editor.`);
+        // Action functions - nu met echte N8N API calls
+        async function editWorkflow(workflowName, workflowId) {
+            // Open N8N editor in new tab
+            const n8nUrl = `https://n8n.thevikingwebdesign.com/workflow/${workflowId}`;
+            window.open(n8nUrl, '_blank');
             closeModal();
         }
 
-        function duplicateWorkflow(workflowName) {
-            alert(`Duplicate workflow: ${workflowName}\n\nThis would create a copy of the workflow.`);
-            closeModal();
-        }
-
-        function toggleWorkflow(workflowId) {
-            alert(`Toggle workflow: ${workflowId}\n\nThis would start/pause the workflow.`);
-            closeModal();
-        }
-
-        function deleteWorkflow(workflowName) {
-            if (confirm(`Are you sure you want to delete: ${workflowName}?`)) {
-                alert(`Delete workflow: ${workflowName}\n\nThis would delete the workflow.`);
-                closeModal();
+        async function duplicateWorkflow(workflowName, workflowId) {
+            try {
+                const response = await fetch(`https://n8n.thevikingwebdesign.com/api/v1/workflows/${workflowId}/duplicate`, {
+                    method: 'POST',
+                    headers: {
+                        'X-N8N-API-KEY': 'your-api-key-here',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    alert(`✅ Workflow "${workflowName}" duplicated successfully!`);
+                    loadVikingWorkflows(); // Refresh data
+                } else {
+                    throw new Error('Duplication failed');
+                }
+            } catch (error) {
+                alert(`❌ Failed to duplicate workflow: ${error.message}`);
             }
+            closeModal();
+        }
+
+        async function toggleWorkflow(workflowId, currentStatus) {
+            try {
+                const action = currentStatus ? 'deactivate' : 'activate';
+                const response = await fetch(`https://n8n.thevikingwebdesign.com/api/v1/workflows/${workflowId}/${action}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-N8N-API-KEY': 'your-api-key-here',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const newStatus = currentStatus ? 'paused' : 'resumed';
+                    alert(`✅ Workflow ${newStatus} successfully!`);
+                    
+                    // Update UI immediately
+                    updateWorkflowStatusInUI(workflowId, !currentStatus);
+                    
+                    // Refresh data
+                    setTimeout(() => loadVikingWorkflows(), 1000);
+                } else {
+                    throw new Error(`Failed to ${action} workflow`);
+                }
+            } catch (error) {
+                alert(`❌ Failed to toggle workflow: ${error.message}`);
+            }
+            closeModal();
+        }
+
+        // Update workflow status in UI without full reload
+        function updateWorkflowStatusInUI(workflowId, newStatus) {
+            const workflowElements = document.querySelectorAll('.workflow-item');
+            workflowElements.forEach(element => {
+                if (element.dataset.workflowId === workflowId.toString()) {
+                    const statusIndicator = element.querySelector('.status-indicator');
+                    const statusText = element.querySelector('.workflow-status span:last-child');
+                    
+                    if (newStatus) {
+                        element.className = 'workflow-item active';
+                        statusIndicator.className = 'status-indicator status-active';
+                        statusText.textContent = '✅ Active';
+                    } else {
+                        element.className = 'workflow-item inactive';
+                        statusIndicator.className = 'status-indicator status-inactive';
+                        statusText.textContent = '⏸️ Inactive';
+                    }
+                }
+            });
+        }
+
+        async function deleteWorkflow(workflowName, workflowId) {
+            if (confirm(`⚠️ Are you sure you want to DELETE workflow: "${workflowName}"?\n\nThis action cannot be undone!`)) {
+                try {
+                    const response = await fetch(`https://n8n.thevikingwebdesign.com/api/v1/workflows/${workflowId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-N8N-API-KEY': 'your-api-key-here',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        alert(`✅ Workflow "${workflowName}" deleted successfully!`);
+                        loadVikingWorkflows(); // Refresh data
+                    } else {
+                        throw new Error('Deletion failed');
+                    }
+                } catch (error) {
+                    alert(`❌ Failed to delete workflow: ${error.message}`);
+                }
+            }
+            closeModal();
         }
 
         function updateFolderStats(folderId, count) {
