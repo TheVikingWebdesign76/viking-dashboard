@@ -189,127 +189,6 @@
             grid-column: 1 / -1;
         }
 
-        .admin-section {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            border-left: 4px solid #ff6b35;
-        }
-
-        .admin-section h4 {
-            margin-bottom: 15px;
-            color: #ff6b35;
-            font-size: 1.1rem;
-        }
-
-        .create-client-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 10px;
-        }
-
-        .form-row input, .form-row select {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border-radius: 5px;
-        }
-
-        .form-row input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .admin-btn {
-            background: #ff6b35;
-            padding: 12px 20px;
-            font-size: 14px;
-        }
-
-        .admin-btn:disabled {
-            background: #999;
-            cursor: not-allowed;
-        }
-
-        .setup-link-container {
-            background: rgba(74, 222, 128, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #4ade80;
-        }
-
-        .link-display {
-            display: flex;
-            gap: 10px;
-            margin: 10px 0;
-        }
-
-        .link-display input {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .copy-btn {
-            padding: 10px 15px;
-            background: #4ade80;
-            font-size: 12px;
-        }
-
-        .setup-instructions {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-top: 10px;
-        }
-
-        .success-message {
-            background: rgba(74, 222, 128, 0.2);
-            color: #4ade80;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            border-left: 4px solid #4ade80;
-        }
-
-        .clients-list {
-            display: grid;
-            gap: 10px;
-        }
-
-        .client-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .client-info span {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .client-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .client-actions button {
-            padding: 5px 10px;
-            font-size: 12px;
-        }
-
         .workflow-item {
             background: rgba(255, 255, 255, 0.1);
             padding: 12px;
@@ -354,10 +233,6 @@
             .stat-grid {
                 grid-template-columns: 1fr;
             }
-
-            .form-row {
-                flex-direction: column;
-            }
         }
     </style>
 </head>
@@ -385,50 +260,13 @@
             <!-- Admin Panel (Only for VIKING001) -->
             <div class="card admin-panel" id="adminPanel" style="display: none;">
                 <h3>⚔️ Admin Panel</h3>
-                
-                <!-- Create Client Section -->
-                <div class="admin-section">
-                    <h4>👥 Create New Client</h4>
-                    <div class="create-client-form">
-                        <div class="form-row">
-                            <input type="text" id="newClientId" placeholder="Client ID (e.g: CLIENT004)" />
-                            <input type="text" id="newClientName" placeholder="Client Name" />
-                        </div>
-                        <div class="form-row">
-                            <select id="newClientPackage">
-                                <option value="Pro Lead Generation">Pro Lead Generation</option>
-                                <option value="Enterprise Solution">Enterprise Solution</option>
-                            </select>
-                            <input type="text" id="tempPassword" placeholder="Temporary Password" />
-                        </div>
-                        <button onclick="createNewClient()" id="createClientBtn" class="admin-btn">
-                            <span id="createClientText">🆕 Create Client</span>
-                        </button>
-                    </div>
-                    <div id="createClientResult"></div>
-                </div>
-
-                <!-- Generated Setup Link -->
-                <div class="admin-section" id="setupLinkSection" style="display: none;">
-                    <h4>🔗 Client Setup Link</h4>
-                    <div class="setup-link-container">
-                        <p>Send this link to your new client:</p>
-                        <div class="link-display">
-                            <input type="text" id="setupLink" readonly />
-                            <button onclick="copySetupLink()" class="copy-btn">📋 Copy</button>
-                        </div>
-                        <p class="setup-instructions">
-                            The client will use this link to set their own secure password.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Client Management -->
-                <div class="admin-section">
-                    <h4>📊 Client Overview</h4>
-                    <div id="clientsList">
-                        <div class="loading-clients">Loading clients...</div>
-                    </div>
+                <p style="margin-bottom: 20px;">Full system access and client management tools</p>
+                <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px;">
+                    <p><strong>Admin Features:</strong></p>
+                    <p>• Create and manage clients</p>
+                    <p>• View all workflow statistics</p>
+                    <p>• Generate setup links</p>
+                    <p>• System monitoring and analytics</p>
                 </div>
             </div>
 
@@ -445,10 +283,10 @@
             </div>
 
             <!-- Accessible Workflows -->
-            <div class="card" id="workflowCard" style="display: none;">
+            <div class="card" id="workflowCard">
                 <h3>🔧 Your Workflows</h3>
                 <div id="workflowStatus">
-                    <div class="loading">Loading workflows...</div>
+                    <!-- Workflows will be loaded here -->
                 </div>
             </div>
 
@@ -531,9 +369,8 @@
         
         let currentSession = null;
         let userPermissions = null;
-        let userWorkflows = [];
 
-        // Authentication function with debug logging
+        // Authentication function
         async function authenticateClient() {
             const clientId = document.getElementById('clientId').value.trim();
             const password = document.getElementById('clientPassword').value.trim();
@@ -554,9 +391,9 @@
             document.getElementById('loginText').innerHTML = '<span class="loading"></span> Authenticating...';
             
             try {
-                console.log('Attempting N8N authentication...');
+                console.log('🔐 Attempting authentication for:', clientId);
                 
-                // Call N8N authentication API
+                // Try N8N API first
                 const response = await fetch(`${N8N_API_BASE}/client-login`, {
                     method: 'POST',
                     headers: {
@@ -568,45 +405,40 @@
                     })
                 });
                 
-                console.log('N8N Response status:', response.status);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        console.log('✅ N8N Authentication successful');
+                        currentSession = data;
+                        showDashboard(data);
+                        await loadUserPermissions(clientId);
+                        return;
+                    }
                 }
-                
-                const data = await response.json();
-                console.log('N8N Response data:', data);
-                
-                if (data.success) {
-                    // Authentication successful
-                    console.log('✅ N8N Authentication successful');
-                    currentSession = data;
-                    showDashboard(data);
-                    
-                    // Load permissions after successful authentication
-                    await loadUserPermissions(data.client_id || clientId);
-                    
-                } else {
-                    // Authentication failed
-                    console.log('❌ N8N Authentication failed:', data.message);
-                    showError(data.message || 'Invalid credentials');
-                }
-                
-            } catch (error) {
-                console.error('N8N API error:', error);
-                console.log('🔄 Falling back to local authentication');
                 
                 // Fallback to local authentication
+                console.log('🔄 Using local authentication');
                 const localAuth = authenticateLocally(clientId, password);
                 if (localAuth.success) {
                     console.log('✅ Local authentication successful');
                     currentSession = localAuth;
                     showDashboard(localAuth);
-                    
-                    // Mock permissions for local auth
-                    mockUserPermissions(localAuth.client_id);
+                    loadLocalPermissions(clientId);
                 } else {
-                    console.log('❌ Local authentication failed');
+                    showError('Invalid credentials. Please check your Client ID and Password.');
+                }
+                
+            } catch (error) {
+                console.error('Authentication error:', error);
+                
+                // Fallback to local authentication
+                const localAuth = authenticateLocally(clientId, password);
+                if (localAuth.success) {
+                    console.log('✅ Local authentication successful (fallback)');
+                    currentSession = localAuth;
+                    showDashboard(localAuth);
+                    loadLocalPermissions(clientId);
+                } else {
                     showError('Connection error. Please check your credentials and try again.');
                 }
             } finally {
@@ -616,11 +448,48 @@
             }
         }
 
-        // Load user permissions from N8N
+        // Local authentication with correct credentials
+        function authenticateLocally(clientId, password) {
+            const credentials = {
+                'VIKING001': { 
+                    password: 'viking2025', 
+                    name: 'The Viking Webdesign', 
+                    package: 'Owner Full Access',
+                    role: 'owner'
+                },
+                'CLIENT001': { 
+                    password: 'client123', 
+                    name: 'ABC Company B.V.', 
+                    package: 'Pro Lead Generation',
+                    role: 'premium_client'
+                },
+                'CLIENT002': { 
+                    password: 'startup456', 
+                    name: 'XYZ Startup', 
+                    package: 'Pro Lead Generation',
+                    role: 'basic_client'
+                }
+            };
+            
+            const client = credentials[clientId.toUpperCase()];
+            if (client && client.password === password) {
+                return {
+                    success: true,
+                    client_id: clientId.toUpperCase(),
+                    client_name: client.name,
+                    package_type: client.package,
+                    role: client.role,
+                    active_since: '2025-07-04',
+                    session_token: `local_${clientId}_${Date.now()}`
+                };
+            }
+            
+            return { success: false, message: 'Invalid credentials' };
+        }
+
+        // Load user permissions
         async function loadUserPermissions(clientId) {
             try {
-                console.log('🔍 Loading permissions for:', clientId);
-                
                 const response = await fetch(`${N8N_API_BASE}/check-permissions`, {
                     method: 'POST',
                     headers: {
@@ -632,53 +501,51 @@
                     })
                 });
                 
-                if (!response.ok) {
-                    throw new Error(`Permission check failed: ${response.status}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    userPermissions = data;
+                    configureDashboard(data);
+                } else {
+                    loadLocalPermissions(clientId);
                 }
-                
-                const data = await response.json();
-                userPermissions = data;
-                userWorkflows = data.accessible_workflows || [];
-                
-                console.log('👤 User role:', data.role);
-                console.log('🔧 Accessible workflows:', userWorkflows.length);
-                
-                // Configure dashboard based on permissions
-                configureDashboard(data);
-                
             } catch (error) {
                 console.error('Failed to load permissions:', error);
-                console.log('🔄 Using fallback permissions');
-                
-                // Fallback permissions
-                mockUserPermissions(clientId);
+                loadLocalPermissions(clientId);
             }
         }
 
-        // Mock permissions for fallback
-        function mockUserPermissions(clientId) {
+        // Load local permissions for fallback
+        function loadLocalPermissions(clientId) {
             if (clientId === 'VIKING001') {
                 userPermissions = {
                     role: 'owner',
-                    has_requested_permission: true,
                     accessible_workflows: [
                         { workflow_name: 'Lead Generation 2.0', access_level: 'admin', is_active: true },
                         { workflow_name: 'Email Marketing Automation', access_level: 'admin', is_active: true },
-                        { workflow_name: 'Follow-up Sequences', access_level: 'admin', is_active: true }
+                        { workflow_name: 'Follow-up Sequences', access_level: 'admin', is_active: true },
+                        { workflow_name: 'Database Cleanup', access_level: 'admin', is_active: true },
+                        { workflow_name: 'Daily Reports', access_level: 'admin', is_active: true }
+                    ]
+                };
+            } else if (clientId === 'CLIENT001') {
+                userPermissions = {
+                    role: 'premium_client',
+                    accessible_workflows: [
+                        { workflow_name: 'Lead Generation 2.0', access_level: 'read', is_active: true },
+                        { workflow_name: 'Email Marketing Automation', access_level: 'read', is_active: true },
+                        { workflow_name: 'Follow-up Sequences', access_level: 'read', is_active: true }
                     ]
                 };
             } else {
                 userPermissions = {
-                    role: 'client_premium',
-                    has_requested_permission: false,
+                    role: 'basic_client',
                     accessible_workflows: [
                         { workflow_name: 'Lead Generation 2.0', access_level: 'read', is_active: true },
-                        { workflow_name: 'Email Marketing Automation', access_level: 'read', is_active: true }
+                        { workflow_name: 'Email Marketing Automation', access_level: 'read', is_active: false }
                     ]
                 };
             }
             
-            userWorkflows = userPermissions.accessible_workflows;
             configureDashboard(userPermissions);
         }
 
@@ -686,38 +553,28 @@
         function configureDashboard(permissionData) {
             const { role, accessible_workflows } = permissionData;
             
-            console.log('🎛️ Configuring dashboard for role:', role);
-            
             // Show/hide admin panel
             if (role === 'owner') {
                 document.getElementById('adminPanel').style.display = 'block';
-                console.log('⚔️ Owner access - admin panel enabled');
+                document.getElementById('clientRole').textContent = 'Owner';
             } else {
                 document.getElementById('adminPanel').style.display = 'none';
-                console.log('👤 Premium client - admin panel hidden');
+                document.getElementById('clientRole').textContent = role === 'premium_client' ? 'Premium Client' : 'Basic Client';
             }
-            
-            // Update client role display
-            document.getElementById('clientRole').textContent = role === 'owner' ? 'Owner' : 'Premium Client';
             
             // Show accessible workflows
             if (accessible_workflows && accessible_workflows.length > 0) {
                 showWorkflowStatus(accessible_workflows);
             }
             
-            // Load appropriate demo data
+            // Load demo data
             loadDemoData(currentSession.client_id);
         }
 
         // Show workflow status
         function showWorkflowStatus(workflows) {
-            const workflowCard = document.getElementById('workflowCard');
             const workflowContainer = document.getElementById('workflowStatus');
-            
-            workflowCard.style.display = 'block';
             workflowContainer.innerHTML = '';
-            
-            console.log('🔧 Showing workflows:', workflows.map(w => w.workflow_name));
             
             workflows.forEach(workflow => {
                 const workflowElement = createWorkflowElement(workflow);
@@ -729,7 +586,6 @@
         function createWorkflowElement(workflow) {
             const div = document.createElement('div');
             div.className = 'workflow-item';
-            div.dataset.workflowName = workflow.workflow_name;
             
             const statusClass = workflow.is_active ? 'status-active' : 'status-inactive';
             const statusText = workflow.is_active ? '🟢 Active' : '🔴 Inactive';
@@ -747,9 +603,8 @@
                 </div>
             `;
             
-            // Add click handler for workflow details
             div.addEventListener('click', () => {
-                showWorkflowDetails(workflow);
+                alert(`📊 Workflow: ${workflow.workflow_name}\n\n🔧 Status: ${workflow.is_active ? 'Active' : 'Inactive'}\n🔑 Access: ${workflow.access_level}\n\n(Detailed workflow logs would be shown here)`);
             });
             
             return div;
@@ -763,41 +618,6 @@
                 case 'read': return '👁️';
                 default: return '❓';
             }
-        }
-
-        // Show workflow details
-        function showWorkflowDetails(workflow) {
-            const canViewDetails = userPermissions?.role === 'owner' || workflow.access_level !== 'read';
-            
-            if (!canViewDetails) {
-                showError('You have read-only access to this workflow');
-                return;
-            }
-            
-            alert(`📊 Workflow: ${workflow.workflow_name}\n\n🔧 Status: ${workflow.is_active ? 'Active' : 'Inactive'}\n🔑 Access: ${workflow.access_level}\n\n(Detailed workflow logs would be shown here)`);
-        }
-        
-        // Local fallback authentication
-        function authenticateLocally(clientId, password) {
-            const credentials = {
-                'VIKING001': { password: 'viking2025', name: 'The Viking Webdesign', package: 'Owner Full Access' },
-                'CLIENT001': { password: 'client123', name: 'ABC Company B.V.', package: 'Pro Lead Generation' },
-                'CLIENT002': { password: 'startup456', name: 'XYZ Startup', package: 'Pro Lead Generation' }
-            };
-            
-            const client = credentials[clientId.toUpperCase()];
-            if (client && client.password === password) {
-                return {
-                    success: true,
-                    client_id: clientId.toUpperCase(),
-                    client_name: client.name,
-                    package_type: client.package,
-                    active_since: '2025-07-04',
-                    session_token: `local_${clientId}_${Date.now()}`
-                };
-            }
-            
-            return { success: false, message: 'Invalid credentials' };
         }
         
         // Show dashboard after successful login
@@ -815,30 +635,59 @@
             document.getElementById('sessionInfo').textContent = 'Secure connection ✅';
         }
         
-        // Load demo data
+        // Load demo data based on client
         function loadDemoData(clientId) {
-            console.log('📈 Loading demo data for:', clientId);
+            console.log('📈 Loading data for:', clientId);
             
             const demoData = {
-                'VIKING001': { workflows: 8, executions: 1247, newLeads: 23, emailsSent: 156 },
-                'CLIENT001': { workflows: 5, executions: 892, newLeads: 15, emailsSent: 98 },
-                'CLIENT002': { workflows: 3, executions: 445, newLeads: 8, emailsSent: 45 }
+                'VIKING001': { 
+                    workflows: 8, 
+                    executions: 1247, 
+                    newLeads: 23, 
+                    emailsSent: 156,
+                    successRate: '98.2%',
+                    totalLeads: '1,456',
+                    conversionRate: '12.8%'
+                },
+                'CLIENT001': { 
+                    workflows: 5, 
+                    executions: 892, 
+                    newLeads: 15, 
+                    emailsSent: 98,
+                    successRate: '97.1%',
+                    totalLeads: '847',
+                    conversionRate: '14.2%'
+                },
+                'CLIENT002': { 
+                    workflows: 3, 
+                    executions: 445, 
+                    newLeads: 8, 
+                    emailsSent: 45,
+                    successRate: '95.8%',
+                    totalLeads: '324',
+                    conversionRate: '11.5%'
+                }
             };
             
             const data = demoData[clientId] || demoData['CLIENT001'];
             
+            // Update workflow statistics
             document.getElementById('activeWorkflows').textContent = data.workflows;
             document.getElementById('totalExecutions').textContent = data.executions.toLocaleString();
-            document.getElementById('successRate').textContent = '98.2%';
+            document.getElementById('successRate').textContent = data.successRate;
+            document.getElementById('lastRun').textContent = '2 min';
+            
+            // Update lead generation
             document.getElementById('newLeads').textContent = data.newLeads;
             document.getElementById('qualifiedLeads').textContent = Math.floor(data.newLeads * 0.8);
-            document.getElementById('totalLeads').textContent = '1,456';
-            document.getElementById('conversionRate').textContent = '12.8%';
+            document.getElementById('totalLeads').textContent = data.totalLeads;
+            document.getElementById('conversionRate').textContent = data.conversionRate;
+            
+            // Update email campaigns
             document.getElementById('emailsSent').textContent = data.emailsSent;
             document.getElementById('emailsOpened').textContent = Math.floor(data.emailsSent * 0.57);
             document.getElementById('emailsClicked').textContent = Math.floor(data.emailsSent * 0.15);
             document.getElementById('emailsReplied').textContent = Math.floor(data.emailsSent * 0.04);
-            document.getElementById('lastRun').textContent = '2 min';
         }
         
         // Error display
@@ -852,12 +701,13 @@
             console.log('🚪 Logging out');
             currentSession = null;
             userPermissions = null;
-            userWorkflows = [];
+            
             document.getElementById('loginSection').style.display = 'block';
             document.getElementById('dashboard').classList.remove('active');
             document.getElementById('logoutBtn').classList.remove('active');
             document.getElementById('adminPanel').style.display = 'none';
-            document.getElementById('workflowCard').style.display = 'none';
+            
+            // Clear form
             document.getElementById('clientId').value = '';
             document.getElementById('clientPassword').value = '';
             document.getElementById('errorMessage').innerHTML = '';
@@ -869,3 +719,6 @@
                 authenticateClient();
             }
         });
+    </script>
+</body>
+</html>
